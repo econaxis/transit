@@ -22,3 +22,6 @@ def main(mytimer: func.TimerRequest) -> None:
               vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id))
     print("inserting")
     cursor.executemany("INSERT INTO realtime VALUES (?,?,?,?,?,?,?,?,?,?)", to_insert)
+
+if __name__ == '__main__':
+    main(None)
