@@ -1,9 +1,6 @@
 import azure.functions as func
 import requests
-try:
-    import my_pb2
-except ImportError:
-    from . import my_pb2
+from . import my_pb2
 import pyodbc
 import logging
 

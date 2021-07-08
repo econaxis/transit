@@ -1,47 +1,40 @@
-from azure.storage.blob import BlobServiceClient
+import json
+
 import flask
 import redis
-import zstandard as zstd
-from TimerTrigger1 import my_pb2 as PBDef
-from google.protobuf.json_format import MessageToJson
-import sqlite3
+from flask import request
+import pyodbc
+from datetime import datetime, timedelta
 
-
-con = sqlite3.connect("transit.db")
-
-cur = con.cursor()
-redis = redis.StrictRedis (host="redis-18070.c53.west-us.azure.cloud.redislabs.com", port = 18070, password="nhWkkCADbwbFrLG9dVjFzPOqCWcQJ6LZ")
-blob_service_client = BlobServiceClient.from_connection_string(
-    conn_str="DefaultEndpointsProtocol=https;AccountName=storageaccounttransbc67;AccountKey=De187+KqHglpnjS3Uj+48Xp2cW4uSZU8GXZ5LDAPW5eqI3kpMyUXSbbXUmZv1rQsdTAdgb1QdRDdm9VsaixEww==;EndpointSuffix=core.windows.net")
-
-
-blob_service = blob_service_client.get_container_client("transit")
+sqlconn = pyodbc.connect(
+    "Driver={ODBC Driver 17 for SQL Server};Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+cur = sqlconn.cursor()
+redis = redis.StrictRedis(host="redis-18070.c53.west-us.azure.cloud.redislabs.com", port=18070,
+                          password="nhWkkCADbwbFrLG9dVjFzPOqCWcQJ6LZ")
 
 app = flask.Flask(__name__)
 
-dictionary = zstd.ZstdCompressionDict(open("TimerTrigger1/dict", "rb").read())
-decompressor = zstd.ZstdDecompressor(dict_data=dictionary)
 
 @app.route("/positions")
 def positions():
-    lastupdate = redis.lindex("queue", 0)
+    cutofftime = request.args.get("last-timestamp", datetime.now().timestamp() - 3600)
 
-    if redis.get("cache") == lastupdate:
-        print("using cache")
-        feedmessage_json = redis.get("cache_content")
-    else:
-        bytes = blob_service.download_blob(lastupdate).content_as_bytes()
-        bytes = decompressor.decompress(bytes)
-        feedmessage = PBDef.FeedMessage()
-        feedmessage.ParseFromString(bytes)
-        feedmessage_json = MessageToJson(feedmessage)
+    query = """
+    select distinct realtime.vehicle_id, latitude, longitude, timestamp, trip_id, cur_stop_sequence
+from realtime
+         inner join
+     (select max(timestamp) as maxtimestamp, vehicle_id
+      from realtime
+      where timestamp > ?
+      group by vehicle_id) as temp
+     on temp.vehicle_id = realtime.vehicle_id and temp.maxtimestamp = realtime.timestamp
+    """
 
-        transaction = redis.pipeline()
-        transaction.set("cache", lastupdate)
-        transaction.set("cache_content", feedmessage_json)
-        transaction.ltrim("queue", 0, 3)
-        transaction.execute()
+    result = cur.execute(query, cutofftime).fetchall()
 
-    response = flask.Response(feedmessage_json, headers=[("Content-Type", "application/json")])
-    return response
+    resultstr = json.dumps([dict(
+        vehicle_id=x.vehicle_id, latitude=x.latitude, longitude=x.longitude, timestamp=x.timestamp, trip_id=x.trip_id,
+        cur_stop_sequence=x.cur_stop_sequence
+    ) for x in result])
 
+    return flask.Response(resultstr, headers=[("Content-Type", "application/json")])

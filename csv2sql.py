@@ -1,5 +1,6 @@
 import pyodbc, csv
 from datetime import datetime
+from multiprocessing import Pool, Value
 
 
 def conv_time_to_int(timestr):
@@ -43,38 +44,62 @@ CREATE TABLE  stops (
 )
 """)
 
+if not cur.tables(table='headsigns', tableType='TABLE').fetchone():
+    cur.execute("""
+CREATE TABLE  headsigns (
+    route_id INTEGER PRIMARY KEY,
+    headsign VARCHAR(100),
+    routenumber VARCHAR(10)
+)
+""")
+
 sqlconn.commit()
 
-# Fill stop times table
-stop_times_values = []
-for row in csv.DictReader(open("gtfs/stop_times.txt", "r")):
-    row["arrival_time"] = conv_time_to_int(row["arrival_time"])
-    row["departure_time_i"] = conv_time_to_int(row["departure_time"])
+#
+# # Fill stop times table
+# stop_times_values = []
+# already = 0
+# # for row in
+# num = Value("i", 0)
+#
+#
+# def process(row):
+#     global num
+#     row["arrival_time"] = conv_time_to_int(row["arrival_time"])
+#     row["departure_time_i"] = conv_time_to_int(row["departure_time"])
+#
+#     if row["shape_dist_traveled"] == '':
+#         row["shape_dist_traveled"] = 0
+#
+#     num.value += 1
+#     if num.value % 5000 == 0:
+#         print(num.value)
+#     return (row["trip_id"],
+#                               row["arrival_time"],
+#                               row["departure_time_i"],
+#                               row["departure_time"],
+#                               row["stop_id"],
+#                               row["stop_sequence"],
+#                               row["pickup_type"],
+#                               row["drop_off_type"],
+#                               row["shape_dist_traveled"])
+#
+#
+# with Pool(processes = 4) as pool:
+#     print("starting")
+#     result = pool.map(process, csv.DictReader(open("gtfs/stop_times.txt", "r")))
+#     cur.executemany("INSERT INTO stops values (?,?,?,?,?,?,?,?,?)", result)
+#
+# trips_values = []
+# # Fill trips table
+# for row in csv.DictReader(open("gtfs/trips.txt", "r")):
+#     trips_values.append((row["route_id"], row["trip_id"], row["trip_headsign"]))
+#
+# cur.executemany("INSERT INTO trips values (?, ?, ?)", trips_values)
+#
 
-    if row["shape_dist_traveled"] == '':
-        row["shape_dist_traveled"] = 0
-    stop_times_values.append((row["trip_id"],
-                              row["arrival_time"],
-                              row["departure_time_i"],
-                              row["departure_time"],
-                              row["stop_id"],
-                              row["stop_sequence"],
-                              row["pickup_type"],
-                              row["drop_off_type"],
-                              row["shape_dist_traveled"]))
-
-    if len(stop_times_values) > 100000:
-        print("Executing")
-        cur.executemany("INSERT INTO stops values (?,?,?,?,?,?,?,?,?)", stop_times_values)
-        stop_times_values.clear()
-
-trips_values = []
-# Fill trips table
-for row in csv.DictReader(open("gtfs/trips.txt", "r")):
-    trips_values.append((row["route_id"], row["trip_id"], row["trip_headsign"]))
-
-cur.executemany("INSERT INTO trips values (?, ?, ?)", trips_values)
-
+for row in csv.DictReader(open("gtfs/routes.txt", "r")):
+    cur.execute("INSERT INTO headsigns VALUES (?, ?, ?)", row["route_id"], row["route_long_name"], row["route_short_name"])
 
 
 sqlconn.commit()
