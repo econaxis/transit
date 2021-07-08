@@ -3,6 +3,4 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
-azure-storage-blob
-zstandard
-redis
+pyodbc

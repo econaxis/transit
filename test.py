@@ -1,8 +1,6 @@
-import my_pb2
+from TimerTrigger1 import my_pb2
 import requests
 from google.protobuf.json_format import MessageToJson
-import zstandard as zstd
-
 
 f = open("/tmp/position.json", "w+")
 p = my_pb2.FeedMessage()
