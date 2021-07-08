@@ -1,14 +1,18 @@
+import sys
+
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    print("Uncaught exception", (exc_type, exc_value, exc_traceback))
+    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+
+sys.excepthook = handle_exception
+
 import azure.functions as func
 import requests
 from . import my_pb2
 import pyodbc
 import logging
-import sys
-def handle_exception(exc_type, exc_value, exc_traceback):
-    print("Uncaught exception", (exc_type, exc_value, exc_traceback))
-    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-sys.excepthook = handle_exception
-
 
 sqlconn = pyodbc.connect(
     "Driver={ODBC Driver 17 for SQL Server};Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
@@ -25,9 +29,10 @@ def main(mytimer: func.TimerRequest) -> None:
     to_insert = []
     for entity in msg.entity:
         vehicle = entity.vehicle
-        to_insert.append((vehicle.trip.trip_id, vehicle.trip.start_date, vehicle.trip.route_id, vehicle.trip.direction_id,
-              vehicle.position.latitude, vehicle.position.longitude,
-              vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id))
+        to_insert.append(
+            (vehicle.trip.trip_id, vehicle.trip.start_date, vehicle.trip.route_id, vehicle.trip.direction_id,
+             vehicle.position.latitude, vehicle.position.longitude,
+             vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id))
     logging.info("inserting")
     cursor.executemany("INSERT INTO realtime VALUES (?,?,?,?,?,?,?,?,?,?)", to_insert)
     sqlconn.commit()
