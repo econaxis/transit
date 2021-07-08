@@ -3,6 +3,12 @@ import requests
 from . import my_pb2
 import pyodbc
 import logging
+import sys
+def handle_exception(exc_type, exc_value, exc_traceback):
+    print("Uncaught exception", (exc_type, exc_value, exc_traceback))
+    logging.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+sys.excepthook = handle_exception
+
 
 sqlconn = pyodbc.connect(
     "Driver={ODBC Driver 17 for SQL Server};Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
