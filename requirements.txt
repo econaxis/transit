@@ -4,5 +4,5 @@
 
 azure-functions
 azure-storage-blob
-azure-storage-queue
 zstandard
+redis
