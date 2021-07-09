@@ -2,7 +2,7 @@ let rootapiurl = function (str) {
     return "http://localhost:5000" + str;
 }
 
-var map = L.map('mapid').setView([49.1, -123], 12);
+var map = L.map('mapid').setView([49.25, -123], 12);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -28,9 +28,18 @@ function clear_layers_from_map() {
 async function fill_map(data) {
     clear_layers_from_map();
     let layergroup = L.layerGroup([]);
+    data = data.filter((elem) => {
+        return elem.latitude != 0 && elem.longitude != 0;
+    });
+
     for (const bus of data) {
         bus.headsign = headsigns[bus.route_id].join(" ");
-        L.circleMarker(L.latLng(bus.latitude, bus.longitude), {radius: 8, fill:true, stroke:true, fillOpacity: 0.8}).bindPopup(bus.headsign).on("click", (e) => {
+        L.circleMarker(L.latLng(bus.latitude, bus.longitude), {
+            radius: 6,
+            fill: true,
+            stroke: true,
+            fillOpacity: 0.8
+        }).bindPopup(bus.headsign).on("click", (e) => {
             render_history(bus.vehicle_id);
         }).addTo(layergroup);
     }
@@ -45,19 +54,22 @@ async function download_data() {
 
 render_history_running = false;
 
+let historypath = [];
+
+
+function gjsontolatlng(arr) {
+    return L.latLng(arr[1], arr[0]);
+}
+
+
+
 async function render_history(vehicleid) {
     if (render_history_running) return;
 
     render_history_running = true;
     if (history) map.removeLayer(history);
-    let gjsontemplate = {
-        "type": "Feature",
-        "geometry": {
-            "type": "LineString",
-            "coordinates": []
-        },
-    };
-    let gjsonpoints = [];
+
+    let gjsonlines = [];
     let historydata = await (await fetch(rootapiurl("/history?vehicleid=") + vehicleid)).json();
     let lastbus = historydata[0];
     for (const d of historydata) {
@@ -67,37 +79,61 @@ async function render_history(vehicleid) {
         }
         if (d.timestamp - lastbus.timestamp >= 10 * 60) {
             break;
-        } else {
-            lastbus = d;
         }
-
-
-        gjsontemplate.geometry.coordinates.push([d.longitude, d.latitude]);
-        gjsonpoints.push({
-            type: "Feature",
-            geometry: {
-                "type": "Point",
-                coordinates: [d.longitude, d.latitude]
+        gjsonlines.push({
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [[lastbus.longitude, lastbus.latitude], [d.longitude, d.latitude]]
+            },
+            "properties": {
+                "timestamp": d.timestamp,
+                "location": L.latLng(lastbus.latitude, lastbus.longitude)
             }
-        })
+        });
+        lastbus = d;
     }
-    history = L.geoJSON([gjsontemplate, ...gjsonpoints], {
-        style: {
-            "color": "#ff7800",
-            "weight": 3,
-            "opacity": 0.5
+    let mintimestamp = lastbus.timestamp;
+    let maxtimestamp = historydata[0].timestamp;
+
+    // Draw the last lines first, so the most recent lines go on top of the least recent lines.
+    gjsonlines.reverse();
+
+    let features = [], layers= [];
+
+    let lastcoord = undefined;
+    history = L.geoJSON({type: "FeatureList", "features": gjsonlines}, {
+        style: (feature) => {
+            let saturation = ((feature.properties.timestamp - mintimestamp) / (maxtimestamp - mintimestamp) * 0.8 + 0.2).toFixed(5);
+            let hue = (1 - saturation) * 70;
+            let colorstr = `hsl(${hue}, ${saturation * 100}%, 70%)`;
+            return {color: colorstr, weight: 6};
         },
-        pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, {
-                radius: 5,
-                fillColor: "#ff7800",
-                color: "#000",
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
+        onEachFeature: (feature, layer) => {
+            layer.bindTooltip(new Date(feature.properties.timestamp * 1000).toLocaleTimeString(), {className: "overlay"});
+            features.push(feature);
+
+            if(lastcoord === undefined || feature.properties.location.distanceTo(lastcoord) >= 300) layers.push(layer);
+
+            lastcoord = feature.properties.location;
         }
     });
+
+    historypath = features;
+
+    history.on("mouseover", (e) => {
+        layers.forEach((elem) => {
+            elem.openTooltip();
+        })
+    }).on("mouseout", (e) => {
+        layers.forEach((elem) => {
+            elem.closeTooltip();
+        });
+    })
+
+
+    console.log(history);
+
     history.addTo(map);
     render_history_running = false;
 }

@@ -17,7 +17,7 @@ CORS(app)
 
 @app.route("/positions")
 def positions():
-    cutofftime = request.args.get("last-timestamp", 0)
+    cutofftime = request.args.get("last-timestamp", datetime.now().timestamp() - 3600)
 
     query = """
     select distinct realtime.vehicle_id, latitude, longitude, timestamp, trip_id, cur_stop_sequence, realtime.route_id
@@ -56,7 +56,7 @@ def history():
     vehicleid = request.args.get("vehicleid")
 
     result = cur.execute("""
-    select distinct TOP 100 timestamp, latitude, longitude from realtime where vehicle_id=? ORDER BY realtime.timestamp DESC
+    select distinct TOP 30 timestamp, latitude, longitude from realtime where vehicle_id=? ORDER BY realtime.timestamp DESC
     """, vehicleid).fetchall()
 
 

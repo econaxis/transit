@@ -1,1 +1,6 @@
 #mapid { height: 80vh; }
+
+.overlay {
+    padding: 1px;
+    margin: 0;
+}
