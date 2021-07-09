@@ -4,7 +4,7 @@ import redis
 from flask import request
 from flask_cors import CORS
 import pyodbc
-from datetime import datetime, timedelta
+from datetime import datetime
 
 sqlconn = pyodbc.connect(
     "Driver={ODBC Driver 17 for SQL Server};Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
@@ -14,6 +14,7 @@ redis = redis.StrictRedis(host="redis-18070.c53.west-us.azure.cloud.redislabs.co
 
 app = flask.Flask(__name__)
 CORS(app)
+
 
 @app.route("/positions")
 def positions():
@@ -56,10 +57,14 @@ def history():
     vehicleid = request.args.get("vehicleid")
 
     result = cur.execute("""
-    select distinct TOP 30 timestamp, latitude, longitude from realtime where vehicle_id=? ORDER BY realtime.timestamp DESC
+        with maxtripid (trip_id, vehicle_id) as
+            (select TOP 1 trip_id, vehicle_id from realtime where vehicle_id=? ORDER BY realtime.timestamp DESC)
+        
+        select DISTINCT timestamp, * from realtime
+        inner join maxtripid
+        on maxtripid.trip_id = realtime.trip_id and maxtripid.vehicle_id=realtime.vehicle_id
+        ORDER BY realtime.timestamp DESC
     """, vehicleid).fetchall()
 
-
-    resultdict = [dict(timestamp = y.timestamp, latitude = y.latitude, longitude = y.longitude) for y in result]
+    resultdict = [dict(timestamp=y.timestamp, latitude=y.latitude, longitude=y.longitude) for y in result]
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
-
