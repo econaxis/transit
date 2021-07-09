@@ -3,3 +3,7 @@
 local.settings.json
 test
 .venv
+gtfs
+csv2sql.py
+realtime.py
+test.py
