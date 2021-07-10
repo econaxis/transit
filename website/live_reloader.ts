@@ -1,5 +1,6 @@
 import * as L from "leaflet";
-import { rootapiurl, render_history, Positions } from "./index";
+import { rootapiurl, Positions } from "./index";
+import { render_history } from "./render_history";
 
 let g_map_ref: L.Map = undefined;
 const NEWLY_UPDATED_CLASS = "none";
@@ -39,8 +40,6 @@ namespace BusesMapView {
 }
 
 export namespace LiveReloader {
-    import check_is_new = BusesMapView.check_is_new;
-    import get_bus = BusesMapView.get_bus;
     let headsigns = undefined;
 
     export async function init(map: L.Map) {
@@ -68,10 +67,10 @@ export namespace LiveReloader {
 
     /**
      * Fills each Position element with its headsign, like "33 UBC"
-     * @param data {Array.<Positions>}
-     * @return {Array.<Positions>}
+     * @param data
+     * @return {Array<Positions>} with embedded headsigns information
      */
-    function add_headsigns_to_positions_list(data) {
+    function add_headsigns_to_positions_list(data: Array<Positions>) {
         return data.map((elem) => {
             return Object.assign(elem, {
                 headsign: headsigns[elem.route_id].join(" "),
@@ -96,9 +95,8 @@ export namespace LiveReloader {
             0, 0, 1
         ];
 
-        const bounds = g_map_ref.getBounds();
-        const sizex = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) * 0.00000012;
-        const sizey = sizex / 1.5;
+        const sizex = 0.002;
+        const sizey = sizex / 1.2;
 
         console.log(sizex);
         const point0 = matrixmultiply(matrix, [-sizex, sizey, 1]);
@@ -156,13 +154,14 @@ export namespace LiveReloader {
             )
                 .bindPopup(bus.headsign)
                 .on("click", (e) => {
-                    console.log("Clicked", bus.vehicle_id);
-                    render_history(bus.vehicle_id);
+                    render_history(bus.vehicle_id, g_map_ref);
                 });
 
-            if (check_is_new(bus.vehicle_id, bus.timestamp)) {
-                // @ts-ignore
-                if(class_name_updated) bus_layer._rawImage.className += class_name_updated;
+            if (BusesMapView.check_is_new(bus.vehicle_id, bus.timestamp)) {
+                if (class_name_updated) {
+                    // @ts-ignore
+                    bus_layer._rawImage.className += class_name_updated;
+                }
                 BusesMapView.set_bus(bus.vehicle_id, bus_layer, bus.timestamp);
             }
         }
