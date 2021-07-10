@@ -4,3 +4,19 @@
     padding: 1px;
     margin: 0;
 }
+
+.bus {
+}
+
+.newly-updated {
+    animation: highlight 15s cubic-bezier(.76,.05,.86,.06);
+}
+
+@keyframes highlight {
+    0% {
+        filter: hue-rotate(120deg);
+    }
+    100% {
+        filter: none;
+    }
+}

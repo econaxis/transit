@@ -98,7 +98,7 @@ sqlconn.commit()
 # cur.executemany("INSERT INTO trips values (?, ?, ?)", trips_values)
 #
 
-for row in csv.DictReader(open("gtfs/routes.txt", "r")):
+for row in csv.DictReader(open("../gtfs/routes.txt", "r")):
     cur.execute("INSERT INTO headsigns VALUES (?, ?, ?)", row["route_id"], row["route_long_name"], row["route_short_name"])
 
 

@@ -1,6 +1,7 @@
 import logging
 import azure.functions as func
 import sys
+from datetime import datetime
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -34,6 +35,8 @@ def main(mytimer: func.TimerRequest) -> None:
 
     to_insert = []
 
+    now = datetime.now().timestamp()
+
     for entity in msg.entity:
         vehicle = entity.vehicle
         if prev_cache.get(vehicle.vehicle.id, 0) != vehicle.timestamp:
@@ -41,10 +44,10 @@ def main(mytimer: func.TimerRequest) -> None:
             to_insert.append(
                 (vehicle.trip.trip_id, vehicle.trip.start_date, vehicle.trip.route_id, vehicle.trip.direction_id,
                  vehicle.position.latitude, vehicle.position.longitude,
-                 vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id))
+                 vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id, now))
 
     logging.info("Inserting %s", len(to_insert))
 
     if to_insert:
-        cursor.executemany("INSERT INTO realtime VALUES (?,?,?,?,?,?,?,?,?,?)", to_insert)
+        cursor.executemany("INSERT INTO realtime VALUES (?,?,?,?,?,?,?,?,?,?, ?)", to_insert)
     sqlconn.commit()
