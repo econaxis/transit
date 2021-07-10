@@ -68,3 +68,34 @@ def history():
 
     resultdict = [dict(timestamp=y.timestamp, latitude=y.latitude, longitude=y.longitude) for y in result]
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
+
+
+
+@app.route("/velocities")
+def velocities():
+    """
+    TODO: implement filtering based on vehicle ids
+    Returns the velocities of all vehicles.
+    """
+
+    query = """
+        with realtime_top2(latitude, longitude, vehicle_id, timestamp) as (select latitude, longitude, vehicle_id, timestamp
+                                                            FROM (select DISTINCT timestamp,
+                                                                         latitude,
+                                                                         longitude,
+                                                                         vehicle_id,
+                                                                         ROW_NUMBER() over (PARTITION BY vehicle_id ORDER BY timestamp DESC) as rownumber
+                                                                  from realtime) all_rows
+                                                            WHERE rownumber <= 2)
+    select *
+    from (
+             select latitude - LAG(latitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp DESC)   as latdiff,
+                    longitude - LAG(longitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp DESC) as longdiff,
+                    vehicle_id
+             from realtime_top2) withnull
+    where withnull.latdiff IS NOT NULL
+    """
+    result = cur.execute(query).fetchall()
+    resultdict = {row.vehicle_id: (row.latdiff, row.longdiff) for row in result}
+    return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
+
