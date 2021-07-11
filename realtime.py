@@ -107,8 +107,8 @@ def velocities():
                                                             WHERE rownumber <= 2)
     select *
     from (
-             select latitude - LAG(latitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp DESC)   as latdiff,
-                    longitude - LAG(longitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp DESC) as longdiff,
+             select latitude - LAG(latitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp)   as latdiff,
+                    longitude - LAG(longitude) OVER (PARTITION BY vehicle_id ORDER BY timestamp) as longdiff,
                     vehicle_id
              from realtime_top2) withnull
     where withnull.latdiff IS NOT NULL

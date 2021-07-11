@@ -6,9 +6,9 @@ let prevhistory: L.GeoJSON = undefined;
 
 /**
  * Linearly interpolates a value and returns an appropriate color representing how close that value is to "max"
- * @param {number} min
- * @param {number} max
- * @param {number} value
+ * @param min
+ * @param max
+ * @param value
  * @returns {string} HSL color
  */
 function calculate_linear_color(min: number, max: number, value: number) {
@@ -52,7 +52,7 @@ function parse_history_data(historydata: Array<Positions>) {
             properties: {
                 timestamp: d.timestamp,
                 location: curcoord,
-                should_show_popup: curcoord.distanceTo(lastcoord) > 600,
+                should_show_popup: curcoord.distanceTo(lastcoord) > 400,
             },
         });
         lastcoord = curcoord;
@@ -97,14 +97,13 @@ export async function render_history(vehicleid: number, map: L.Map) {
         features: [...gjsoninvis, ...gjsonlines],
     };
 
-    console.log(col);
-
     prevhistory = L.geoJSON(col, {
         style: (feature) => {
             if (feature.properties.invis) {
                 return {
-                    weight: 60,
+                    weight: 100,
                     opacity: 0,
+                    interactive: true,
                     fillOpacity: 0,
                 };
             }
@@ -115,21 +114,23 @@ export async function render_history(vehicleid: number, map: L.Map) {
                     maxtimestamp,
                     feature.properties.timestamp
                 ),
-                weight: 8,
+                weight: 7,
             };
         },
         onEachFeature: (feature, layer) => {
-            if (feature.properties.invis)
+            if (feature.properties.invis) {
+                console.log("registering");
                 layer.bindTooltip(
-                    new Date(
-                        feature.properties.timestamp * 1000
-                    ).toLocaleTimeString(),
+                    (
+                        new Date().getTime() / 1000 -
+                        feature.properties.timestamp
+                    ).toFixed(0),
                     { className: "overlay" }
                 );
+            }
         },
     });
 
-    console.log(gjsonlines.length);
     prevhistory.addTo(map);
     render_history_running = false;
 }

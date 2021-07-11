@@ -9,7 +9,7 @@
 }
 
 .newly-updated {
-    animation: highlight 15s cubic-bezier(.76,.05,.86,.06);
+    animation: highlight 3s cubic-bezier(.76,.05,.86,.06);
 }
 
 @keyframes highlight {
@@ -19,4 +19,8 @@
     100% {
         filter: none;
     }
+}
+
+.bus-image {
+    transform-origin: center;
 }

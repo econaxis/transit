@@ -19,6 +19,14 @@ namespace BusesMapView {
         pop_pus(id);
 
         layer.addTo(g_map_ref);
+
+        //@ts-ignore
+        if (layer._custom) {
+            //@ts-ignore
+            console.log("Setting transform, ", layer._custom.transform);
+            //@ts-ignore
+            layer._image.style.transform += " " + layer._custom.transform;
+        }
         buses.set(id, layer);
 
         buses_last_updated.set(id, last_updated);
@@ -83,40 +91,26 @@ export namespace LiveReloader {
      */
     function create_bus_overlay(position: L.LatLng, velocity: L.LatLng) {
         const angle = Math.atan2(velocity.lat, velocity.lng);
-        const costheta = Math.cos(angle);
-        const sintheta = Math.sin(angle);
-        const xpos = position.lng;
-        const ypos = position.lat;
 
-        //prettier-ignore
-        const matrix = [
-            costheta, -sintheta, xpos,
-            sintheta, costheta, ypos,
-            0, 0, 1
-        ];
+        const image = new Image(30, 30);
+        image.src = "bus.png";
+        image.className = "bus-image";
+        image.style.position = "absolute";
 
-        const sizex = 0.002;
-        const sizey = sizex / 1.2;
+        g_map_ref.getPane("overlayPane").appendChild(image);
 
-        console.log(sizex);
-        const point0 = matrixmultiply(matrix, [-sizex, sizey, 1]);
-        const point1 = matrixmultiply(matrix, [sizex, sizey, 1]);
-        const point2 = matrixmultiply(matrix, [-sizex, -sizey, 1]);
-        const point0_latlng = L.latLng(point0[1], point0[0]);
-        const point1_latlng = L.latLng(point1[1], point1[0]);
-        const point2_latlng = L.latLng(point2[1], point2[0]);
+        let update_transforms = () => {
+            let offset = g_map_ref.latLngToLayerPoint(position);
 
-        return L.imageOverlay.rotated(
-            get_bus_image(),
-            point0_latlng,
-            point1_latlng,
-            point2_latlng,
-            {
-                alt: "Bus image",
-                interactive: true,
-                className: "bus",
-            }
-        );
+            offset = offset.subtract(
+                new L.Point(image.width / 2, image.height / 2)
+            );
+
+            image.style.transform = `translate(${offset.x}px, ${offset.y}px) rotate(${angle}rad) rotate(180deg)`;
+        };
+
+        g_map_ref.on("zoom", update_transforms);
+        update_transforms();
     }
 
     /**
@@ -148,22 +142,27 @@ export namespace LiveReloader {
                 veldatalatlng[bus.vehicle_id] = L.latLng(0, 0);
             }
 
-            let bus_layer: L.Layer = create_bus_overlay(
-                L.latLng(bus.latitude, bus.longitude),
-                veldatalatlng[bus.vehicle_id]
-            )
-                .bindPopup(bus.headsign)
-                .on("click", (e) => {
-                    render_history(bus.vehicle_id, g_map_ref);
-                });
+            create_bus_overlay(L.latLng(bus.latitude, bus.longitude), veldatalatlng[bus.vehicle_id]);
+            // let bus_layer: L.Layer = create_bus_overlay(
+            //     L.latLng(bus.latitude, bus.longitude),
+            //     veldatalatlng[bus.vehicle_id]
+            // )
+            //     .bindPopup(bus.headsign)
+            //     .on("click", (e) => {
+            //         render_history(bus.vehicle_id, g_map_ref);
+            //     });
 
             if (BusesMapView.check_is_new(bus.vehicle_id, bus.timestamp)) {
                 if (class_name_updated) {
                     // @ts-ignore
-                    bus_layer._rawImage.className += class_name_updated;
+                    // Access internal API to edit class name.
+                    // bus_layer._rawImage.className += class_name_updated;
                 }
-                BusesMapView.set_bus(bus.vehicle_id, bus_layer, bus.timestamp);
+                // BusesMapView.set_bus(bus.vehicle_id, bus_layer, bus.timestamp);
             }
+
+            //@ts-ignore
+            // bus_layer._rawImage.className += " bus-image";
         }
     }
 
@@ -179,12 +178,6 @@ export namespace LiveReloader {
 
     function add_latlng(one: L.LatLng, two: L.LatLng) {
         return L.latLng(one.lat + two.lat, one.lng + two.lng);
-    }
-
-    function generate_bounds(position: L.LatLng, velocity: L.LatLng) {
-        velocity = normalize_latlng_vec(velocity, 0.01);
-        const othercoord = add_latlng(position, velocity);
-        return L.latLngBounds(position, othercoord);
     }
 
     function matrixmultiply(mat: Array<number>, pt: Array<number>) {

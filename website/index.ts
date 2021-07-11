@@ -42,9 +42,29 @@ async function download_positions_data() {
     )) as Array<Positions>;
 }
 
+function append_transform(layer: any, transform: string) {
+    layer._custom.transform += transform;
+    layer._image.style.transform += layer._custom.transform;
+}
+
+map.on("zoomend", (evt) => {
+    console.log("view reset", evt);
+
+    evt.target.eachLayer((layer) => {
+        if (
+            layer.hasOwnProperty("_custom")
+        ) {
+            console.log(layer);
+            //@ts-ignore
+            append_transform(layer, " scale(1.2, 1.2)");
+        }
+    });
+});
+
+
 LiveReloader.init(map)
     .then(() => download_positions_data())
-    .then((d) => LiveReloader.register_live_reloading(20000))
+    .then((d) => LiveReloader.register_live_reloading(20000000))
     .catch((error) => {
         console.log(error);
         debugger;
