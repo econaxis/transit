@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "outDir": "./website/out/",
+    "allowJs": true,
+    "target": "es2017",
+    "moduleResolution": "Node",
+    "module": "esnext"
+  },
+  "include": [
+    "./website/*"
+  ]
+}

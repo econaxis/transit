@@ -1,4 +1,0 @@
-requests
-azure-functions
-pyodbc
-protobuf
