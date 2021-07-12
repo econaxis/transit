@@ -1,6 +1,5 @@
 import * as L from "leaflet";
 import { rootapiurl, Positions } from "./index";
-import { render_history } from "./render_history";
 import {MyImageOverlay} from "./MyImageOverlay";
 import {map} from "leaflet";
 
