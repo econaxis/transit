@@ -3,14 +3,13 @@ import flask
 import redis
 from flask import request
 from flask_cors import CORS
-import pyodbc
+import psycopg2
+import psycopg2.extras
 from datetime import datetime
 
-sqlconn = pyodbc.connect(
-    "Driver={ODBC Driver 17 for SQL Server};"
-    "Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;"
-    "Connection Timeout=30;MARS_Connection=Yes;")
-cur = sqlconn.cursor()
+sqlconn = psycopg2.connect(host = "henry-80q7.local", user = "transit", dbname = "transit", password = "transit")
+
+cur = sqlconn.cursor(cursor_factory = psycopg2.extras.NamedTupleCursor)
 redis = redis.StrictRedis(host="redis-18070.c53.west-us.azure.cloud.redislabs.com", port=18070,
                           password="nhWkkCADbwbFrLG9dVjFzPOqCWcQJ6LZ")
 
@@ -34,8 +33,8 @@ select * from (
               select TOP 1 update_iteration from realtime ORDER BY update_iteration desc
                   ) maxtime INNER JOIN realtime ON maxtime.update_iteration = realtime.update_iteration
     """
-
-    result = cur.execute(query).fetchall()
+    cur.execute(query)
+    result = cur.fetchall()
     return parse_realtime_pos_to_response(result)
 
 
@@ -54,7 +53,8 @@ from realtime
      on temp.vehicle_id = realtime.vehicle_id and temp.maxtimestamp = realtime.timestamp
     """
 
-    result = cur.execute(query, cutofftime).fetchall()
+    result = cur.execute(query, cutofftime)
+    result = cur.fetchall()
     return parse_realtime_pos_to_response(result)
 
 
@@ -62,7 +62,8 @@ from realtime
 def headsigns():
     result = cur.execute("""
     select * from headsigns
-    """).fetchall()
+    """)
+    result = cur.fetchall()
 
     resultdict = {y.route_id: (y.routenumber, y.headsign) for y in result}
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
@@ -81,7 +82,9 @@ def history():
         inner join maxtripid
         on maxtripid.trip_id = realtime.trip_id and maxtripid.vehicle_id=realtime.vehicle_id
         ORDER BY realtime.timestamp DESC
-    """, vehicleid).fetchall()
+    """, vehicleid)
+
+    result = cur.fetchall()
 
     resultdict = [dict(timestamp=y.timestamp, latitude=y.latitude, longitude=y.longitude) for y in result]
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
@@ -113,7 +116,8 @@ def velocities():
              from realtime_top2) withnull
     where withnull.latdiff IS NOT NULL
     """
-    result = cur.execute(query, cutofftime).fetchall()
+    cur.execute(query, cutofftime)
+    result = cur.fetchall()
     resultdict = {row.vehicle_id: (row.latdiff, row.longdiff) for row in result}
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])
 
@@ -121,15 +125,16 @@ def velocities():
 @app.route("/positions-range")
 def positions_range():
     query = """
-    select realtime.vehicle_id, latitude, longitude, timestamp
-    from realtime where realtime.timestamp >= ? and realtime.timestamp <= ? ORDER BY timestamp
+    select realtime.vehicle_id, realtime.route_id, latitude, longitude, timestamp
+    from realtime where realtime.timestamp >= %s and realtime.timestamp <= %s ORDER BY timestamp
     """
-
 
     timerange = [request.args.get("min-time", type=int), request.args.get("max-time", type=int)]
     assert timerange[0] < timerange[1]
-    result = cur.execute(query, timerange[0], timerange[1]).fetchall()
+    cur.execute(query, (timerange[0], timerange[1]))
+    result = cur.fetchall()
     resultdict = [
-        dict(timestamp=row.timestamp, vehicle_id=row.vehicle_id, latitude=row.latitude, longitude=row.longitude) for row
+        dict(timestamp=row.timestamp, vehicle_id=row.vehicle_id, latitude=row.latitude, longitude=row.longitude,
+             route_id=row.route_id) for row
         in result]
     return flask.Response(json.dumps(resultdict), headers=[("Content-Type", "application/json")])

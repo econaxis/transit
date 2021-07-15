@@ -1,9 +1,9 @@
 import * as L from "leaflet";
 import "leaflet-imageoverlay-rotated";
-import { LiveReloader } from "./live_reloader";
 import { PlaybackIterator } from "./playback_machine";
 
 export interface Positions {
+    veldata: L.LatLng;
     vehicle_id: number;
     latitude: number;
     longitude: number;
@@ -58,21 +58,27 @@ function append_transform(layer: any, transform: string) {
 //         debugger;
 //     });
 
+
+//@ts-ignore
+window.pause = false;
+
 async function start() {
     const it = await PlaybackIterator.construct({
-        min:  Math.round(new Date().getTime() / 1000) - 3600 * 5,
+        min:  Math.round(new Date().getTime() / 1000) - 3600 * 1,
         max:  Math.round(new Date().getTime() / 1000),
-    });
+    }, map);
 
     function sleep(time) {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
 
-    it.init(map);
-
     while (it.next(map)) {
-        await sleep(20);
-        // console.log("next");
+        await sleep(50);
+
+        //@ts-ignore
+        while(window.pause) {
+            await sleep(1000);
+        }
     }
 }
 

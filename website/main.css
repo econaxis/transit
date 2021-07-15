@@ -1,0 +1,26 @@
+#mapid { height: 80vh; }
+
+.overlay {
+    padding: 1px;
+    margin: 0;
+}
+
+.bus {
+}
+
+.newly-updated {
+    animation: highlight 3s cubic-bezier(.76,.05,.86,.06);
+}
+
+@keyframes highlight {
+    0% {
+        filter: hue-rotate(120deg);
+    }
+    100% {
+        filter: none;
+    }
+}
+
+.bus-image {
+    transform-origin: center;
+}

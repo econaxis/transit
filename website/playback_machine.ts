@@ -1,95 +1,89 @@
 import { rootapiurl } from "./index";
-import { MyImageOverlay } from "./MyImageOverlay";
+import {
+    MyImageOverlay,
+    HistoricalPosition,
+    update_image,
+} from "./MyImageOverlay";
 import * as L from "leaflet";
+import { point } from "leaflet";
 
-class HistoryEvent {
-    readonly timestamp: number;
-    readonly vehicle_id: number;
-    readonly position: L.LatLng;
+function from_json_list(json, headsigns) {
+    const ret = new Map<number, Array<HistoricalPosition>>();
 
-    static from_json(json: Array<any>) {
-        const ret = Array<HistoryEvent>();
+    for (const elem of json) {
+        const to_insert: HistoricalPosition = {
+            position: L.latLng(elem.latitude, elem.longitude),
+            timestamp: elem.timestamp,
+        };
 
-        for (const elem of json) {
-            ret.push({
-                position: L.latLng(elem.latitude, elem.longitude),
-                timestamp: elem.timestamp,
-                vehicle_id: elem.vehicle_id,
-            });
+        if (ret.has(elem.vehicle_id)) {
+            ret.get(elem.vehicle_id).push(to_insert);
+        } else {
+            ret.set(elem.vehicle_id, [to_insert]);
         }
-        return ret;
     }
+    return ret;
 }
 
 export class PlaybackIterator {
     private min: number;
     private max: number;
+    private cur_time: number;
 
-    private positions_array: Array<HistoryEvent>;
-    private curindex: number;
     private buses: Map<number, MyImageOverlay>;
 
     private constructor(time_range: { min: number; max: number }) {
         this.min = time_range.min;
         this.max = time_range.max;
+        this.cur_time = this.min;
         this.buses = new Map();
-        this.curindex = 0;
     }
 
-    static async construct(time_range: { min: number; max: number }) {
+    // TODO: remove dependency on map
+    static async construct(
+        time_range: { min: number; max: number },
+        map: L.Map
+    ) {
         const instance = new PlaybackIterator(time_range);
 
-        // Fill positions array
-        instance.positions_array = HistoryEvent.from_json(
-            await fetch(
-                rootapiurl(
-                    `/positions-range?min-time=${time_range.min}&max-time=${time_range.max}`
-                )
-            ).then((r) => r.json())
-        );
+        const history_data = await fetch(
+            rootapiurl(
+                `/positions-range?min-time=${time_range.min}&max-time=${time_range.max}`
+            )
+        ).then((r) => r.json());
 
-        console.log(instance.positions_array.length);
+        const headsigns = await fetch(rootapiurl("/headsigns")).then((r) =>
+            r.json()
+        );
+        instance.buses = new Map();
+
+        from_json_list(history_data, headsigns).forEach((value, key) => {
+            const overlay = new MyImageOverlay(value, headsigns[key], map);
+            instance.buses.set(key, overlay);
+        });
+
         return instance;
     }
 
-    private iter_time(max_time: number) {
-        if (++this.curindex < this.positions_array.length) {
-            return this.positions_array[this.curindex].timestamp <= max_time;
-        } else {
-            return false;
-        }
-    }
-
-    init(map: L.Map) {
-        const zerotimestamp = this.positions_array[0].timestamp;
-        const startingtime = zerotimestamp + 180;
-
-        this.show_until(startingtime, map);
-    }
-
-    private show_until(curtimestamp: number, map: L.Map) {
-        while (this.iter_time(curtimestamp)) {
-            const elem = this.positions_array[this.curindex];
-            if (!this.buses.has(elem.vehicle_id)) {
-                this.buses.set(
-                    elem.vehicle_id,
-                    new MyImageOverlay(elem.position, 0, map)
-                );
-            } else {
-                const this_bus = this.buses.get(elem.vehicle_id);
-                this_bus.latlng = elem.position;
-                this_bus.update(map);
-                this_bus.className += "newly-updated";
-            }
-        }
-    }
-
     next(map: L.Map) {
-        const curtimestamp = this.positions_array[this.curindex].timestamp;
-        if (this.curindex >= this.positions_array.length) return false;
+        this.cur_time += 5;
+        const to_remove = Array<number>();
+        const bounds = map.getBounds();
+        this.buses.forEach((value, key) => {
+            if (!value.show_to(this.cur_time)) {
+                to_remove.push(key);
+            }
+        });
 
-        this.show_until(curtimestamp, map);
+        this.buses.forEach((value, key) => {
+            if (value.is_in_map(bounds)) {
+                value.update(map);
+            }
+        });
 
+        to_remove.forEach((key) => this.buses.delete(key));
+
+        if (this.cur_time > this.max) return;
         return true;
     }
 }

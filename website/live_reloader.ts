@@ -1,6 +1,6 @@
 import * as L from "leaflet";
 import { rootapiurl, Positions } from "./index";
-import {MyImageOverlay} from "./MyImageOverlay";
+import {MyImageOverlay, create_image, update_image, get_angle} from "./MyImageOverlay";
 import {map} from "leaflet";
 
 let g_map_ref: L.Map = undefined;
@@ -90,17 +90,17 @@ export namespace LiveReloader {
     /**
      * @return Leaflet overlay type
      */
-    function create_bus_overlay(position: L.LatLng, velocity: L.LatLng) {
-        const angle = Math.atan2(velocity.lat, velocity.lng);
+    function create_bus_overlay(bus) {
+        const position = L.latLng(bus.latitude, bus.longitude);
+        const angle = Math.atan2(bus.veldata.lat, bus.veldata.lng);
 
-        const image = new MyImageOverlay(position, angle, g_map_ref);
+        const image = create_image(position, angle, g_map_ref);
 
         g_map_ref.getPane("overlayPane").appendChild(image);
 
         g_map_ref.on("zoom", () => {
-            image.update(g_map_ref);
+            update_image(image, position, angle, g_map_ref);
         } );
-        image.update(g_map_ref);
     }
 
     /**
@@ -132,7 +132,9 @@ export namespace LiveReloader {
                 veldatalatlng[bus.vehicle_id] = L.latLng(0, 0);
             }
 
-            create_bus_overlay(L.latLng(bus.latitude, bus.longitude), veldatalatlng[bus.vehicle_id]);
+            bus.veldata = veldatalatlng[bus.vehicle_id];
+
+            create_bus_overlay(bus);
             // let bus_layer: L.Layer = create_bus_overlay(
             //     L.latLng(bus.latitude, bus.longitude),
             //     veldatalatlng[bus.vehicle_id]

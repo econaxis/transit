@@ -1,4 +1,4 @@
 gtfs/**
 transit.db
-.idea/**
+.idea
 .venv/**
