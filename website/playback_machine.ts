@@ -1,4 +1,4 @@
-import { rootapiurl } from "./index";
+import { rootapiurl, draw_image_to_canvas } from "./index";
 import {
     MyImageOverlay,
     HistoricalPosition,
@@ -9,7 +9,6 @@ import { point } from "leaflet";
 
 function from_json_list(json, headsigns) {
     const ret = new Map<number, Array<HistoricalPosition>>();
-
     for (const elem of json) {
         const to_insert: HistoricalPosition = {
             position: L.latLng(elem.latitude, elem.longitude),
@@ -27,14 +26,15 @@ function from_json_list(json, headsigns) {
 
 export class PlaybackIterator {
     private min: number;
-    private max: number;
-    private cur_time: number;
-
+    public max: number;
+    public cur_time: number;
+    public stop: boolean;
     private buses: Map<number, MyImageOverlay>;
 
     private constructor(time_range: { min: number; max: number }) {
         this.min = time_range.min;
         this.max = time_range.max;
+        this.stop = false;
         this.cur_time = this.min;
         this.buses = new Map();
     }
@@ -66,7 +66,9 @@ export class PlaybackIterator {
     }
 
     next(map: L.Map) {
-        this.cur_time += 5;
+        if (this.stop) return false;
+
+        this.cur_time += 1;
         const to_remove = Array<number>();
         const bounds = map.getBounds();
         this.buses.forEach((value, key) => {
@@ -76,14 +78,18 @@ export class PlaybackIterator {
         });
 
         this.buses.forEach((value, key) => {
-            if (value.is_in_map(bounds)) {
-                value.update(map);
-            }
+            let offset = map.latLngToLayerPoint(value.curpos);
+
+            const position = offset.subtract(
+                new L.Point(value.image.width / 2, value.image.height / 2)
+            );
+
+            draw_image_to_canvas(value.image, position, value.angle);
+            // update_image(value.image, value.curpos, value.angle, map);
         });
 
         to_remove.forEach((key) => this.buses.delete(key));
 
-        if (this.cur_time > this.max) return;
-        return true;
+        return this.cur_time <= this.max;
     }
 }

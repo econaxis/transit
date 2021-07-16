@@ -1,6 +1,8 @@
 import * as L from "leaflet";
+import { Browser } from "leaflet";
 import "leaflet-imageoverlay-rotated";
 import { PlaybackIterator } from "./playback_machine";
+import { animate } from "./streaming_animator";
 
 export interface Positions {
     veldata: L.LatLng;
@@ -58,28 +60,93 @@ function append_transform(layer: any, transform: string) {
 //         debugger;
 //     });
 
+let canvas_inner_offset = new L.Point(0, 0);
+let canvas_outer_offset = new L.Point(0, 0);
 
-//@ts-ignore
-window.pause = false;
+function move_canvas_to_viewport() {
+    canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    canvas_inner_offset = canvas_inner_offset.add(canvas_outer_offset);
+    canvas_outer_offset = new L.Point(0, 0);
+    canvas.style.transform = "";
+}
+
+map.on("moveend", move_canvas_to_viewport);
+
+function create_canvas(map: L.Map) {
+    const pane = document.getElementById("mapid");
+    const size = map.getSize();
+    const canvas = document.createElement("canvas");
+    canvas.id = "canvas";
+    canvas.width = size.x;
+    canvas.height = size.y;
+
+    canvas.style.border = "5px solid";
+    canvas.style.position = "absolute";
+
+    pane.appendChild(canvas);
+
+    map.on("move", (evt) => {
+        const offset = map
+            .getPixelOrigin()
+            .subtract(map.getPixelBounds().min)
+            .subtract(canvas_inner_offset);
+        canvas_outer_offset = offset;
+        canvas.style.transform = `translate(${canvas_outer_offset.x}px, ${canvas_outer_offset.y}px`;
+    });
+
+    return { canvas_ctx: canvas.getContext("2d"), canvas: canvas };
+}
+
+const { canvas_ctx, canvas } = create_canvas(map);
+const canvas_bounds = new L.Bounds([
+    L.point(0, 0),
+    L.point(canvas.width, canvas.height),
+]);
+
+const windglob = window as any;
+windglob.pause = false;
+windglob.angle = 0;
+
+export function draw_image_to_canvas(
+    image: HTMLImageElement,
+    position: L.Point,
+    angle: number
+) {
+    const predicted_pt = position.add(
+        L.point(canvas_inner_offset.x, canvas_inner_offset.y)
+    );
+    if (!canvas_bounds.contains(predicted_pt)) return;
+
+
+    canvas_ctx.save();
+    // canvas_ctx.translate(canvas_inner_offset.x, canvas_inner_offset.y);
+    canvas_ctx.translate(
+        predicted_pt.x + image.width / 2,
+        predicted_pt.y + image.height / 2
+    );
+    canvas_ctx.rotate(Math.PI + angle);
+    canvas_ctx.translate(-image.width / 2, -image.height / 2);
+    canvas_ctx.drawImage(image, 0, 0, image.width, image.height);
+    canvas_ctx.restore();
+}
 
 async function start() {
-    const it = await PlaybackIterator.construct({
-        min:  Math.round(new Date().getTime() / 1000) - 3600 * 1,
-        max:  Math.round(new Date().getTime() / 1000),
-    }, map);
+    const it = await PlaybackIterator.construct(
+        {
+            min: Math.round(new Date().getTime() / 1000) - 3600 * 30,
+            max: Math.round(new Date().getTime() / 1000 - 3000 * 29.998),
+        },
+        map
+    );
 
     function sleep(time) {
         return new Promise((resolve) => setTimeout(resolve, time));
     }
 
-    while (it.next(map)) {
-        await sleep(50);
-
-        //@ts-ignore
-        while(window.pause) {
-            await sleep(1000);
-        }
-    }
+    animate(it, map, () => {
+        canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
 }
 
 start();

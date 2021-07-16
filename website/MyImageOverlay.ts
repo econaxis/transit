@@ -14,9 +14,9 @@ export function create_image(position: L.LatLng, angle: number, map: L.Map) {
     image.src = "bus.png";
     image.className = "bus-image";
     image.style.position = "absolute";
-    map.getPane("overlayPane").appendChild(image);
+    // map.getPane("overlayPane").appendChild(image);
 
-    update_image(image, position, angle, map);
+    // update_image(image, position, angle, map);
     return image;
 }
 
@@ -42,8 +42,8 @@ export class MyImageOverlay {
     private headsign: string;
     private positions: Array<HistoricalPosition>;
     private curindex: number;
-    private curpos: L.LatLng;
-    private angle: number;
+    public curpos: L.LatLng;
+    public angle: number;
     public image: HTMLImageElement;
 
     constructor(
@@ -62,7 +62,6 @@ export class MyImageOverlay {
         map.on("zoom", () => {
             update_image(this.image, this.curpos, this.angle, map);
         });
-        update_image(this.image, this.curpos, this.angle, map);
     }
 
     update(map: L.Map) {
@@ -96,6 +95,13 @@ export class MyImageOverlay {
         const pos1 = this.positions[old_index].position;
         const pos2 = this.positions[old_index + 1].position;
 
+        // Check that velocity makes sense
+        // Velocity should be less than 20m/s (80km/h), if its more, then render only discrete points, don't interp.
+        if (pos1.distanceTo(pos2) / (time2 - time1) > 20) {
+            if (timestamp - time1 < time2 - timestamp) return pos1;
+            else return pos2;
+        }
+
         const newlat = pos1.lat + alpha * (pos2.lat - pos1.lat);
         const newlng = pos1.lng + alpha * (pos2.lng - pos1.lng);
 
@@ -112,16 +118,13 @@ export class MyImageOverlay {
 
         if (this.curindex >= this.positions.length) return false;
 
-        if(this.positions[this.curindex].timestamp > timestamp) return true;
+        if (this.positions[this.curindex].timestamp > timestamp) return true;
 
         const new_position = this.run_interpolation(this.curindex, timestamp);
 
-        if(!new_position.equals(this.curpos)) this.angle = get_angle(this.curpos, new_position);
+        if (!new_position.equals(this.curpos))
+            this.angle = get_angle(this.curpos, new_position);
         this.curpos = new_position;
         return true;
-    }
-
-    is_in_map(map_bounds: L.LatLngBounds) {
-        return map_bounds.contains(this.curpos);
     }
 }

@@ -1,6 +1,6 @@
 import * as L from "leaflet";
 import { rootapiurl, Positions } from "./index";
-import {MyImageOverlay, create_image, update_image, get_angle} from "./MyImageOverlay";
+import {MyImageOverlay, update_image, get_angle} from "./MyImageOverlay";
 import {map} from "leaflet";
 
 let g_map_ref: L.Map = undefined;
@@ -94,13 +94,13 @@ export namespace LiveReloader {
         const position = L.latLng(bus.latitude, bus.longitude);
         const angle = Math.atan2(bus.veldata.lat, bus.veldata.lng);
 
-        const image = create_image(position, angle, g_map_ref);
+        // const image = create_image(position, angle, g_map_ref);
 
-        g_map_ref.getPane("overlayPane").appendChild(image);
+        // g_map_ref.getPane("overlayPane").appendChild(image);
 
-        g_map_ref.on("zoom", () => {
-            update_image(image, position, angle, g_map_ref);
-        } );
+        // g_map_ref.on("zoom", () => {
+        //     update_image(image, position, angle, g_map_ref);
+        // } );
     }
 
     /**
