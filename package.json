@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@types/leaflet": "^1.7.4",
+    "@types/leaflet-imageoverlay-rotated": "^0.1.4",
+    "leaflet": "^1.7.1",
+    "leaflet-imageoverlay-rotated": "^0.2.1",
+    "ts-loader": "^9.2.3",
+    "webpack": "^5.44.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.7.2"
+  },
+  "scripts": {
+    "webpack": "webpack"
+  }
+}
