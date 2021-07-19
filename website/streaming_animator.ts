@@ -1,60 +1,58 @@
 import { PlaybackIterator } from "./playback_machine";
+import * as L from "leaflet";
+import { AnimSubscriber } from "./index";
 
-export let images_rendered = 0;
+const FRAMEINTERVAL = 1000 / 30;
 
 export function animate(
     it: PlaybackIterator,
-    map: L.Map,
-    clear_func: Function
+    draw_func: Function,
+    check_in_viewport: (pos: L.LatLng) => boolean,
+    subscribers: Array<AnimSubscriber>,
+    last_run_time = 0,
+    created_new = false
 ) {
-    animate_recurse(it, map, false, clear_func);
-}
-
-function animate_recurse(
-    it: PlaybackIterator,
-    map: L.Map,
-    called_new_it: boolean,
-    clear_func: Function
-) {
-    clear_func();
-    const should_continue = it.next(map);
-    if (Math.random() < 0.05) {
-        console.log((new Date(it.cur_time * 1000)).toString());
-    }
-    images_rendered = 0;
-
-    if (it.max - it.cur_time < 200 && !called_new_it) {
-        new_iterator(it.cur_time, map, clear_func).then(() => {
-            // Stop the current one.
-        });
-        it.stop = true;
-        called_new_it = true;
+    if (!it.check_valid()) {
+        return;
     }
 
-    if (should_continue)
-        window.requestAnimationFrame(() => {
-            animate_recurse(it, map, called_new_it, clear_func);
-        });
-    else {
-        console.log("ended");
+    if (Date.now() - last_run_time >= FRAMEINTERVAL) {
+        const drawable = it.next(check_in_viewport);
+        if (it.get_proportion_left() < 0.1 && !created_new) {
+            created_new = true;
+            console.log("Creating new because time short", it.cur_time);
+            new_iterator(it).then((itnew) => {
+                it.stop = true;
+                console.log("Stopping");
+                animate(itnew, draw_func, check_in_viewport, subscribers);
+            });
+        }
+        draw_func(drawable);
+        last_run_time = Date.now();
+        subscribers.forEach((subscr) => subscr(drawable, it.cur_time));
     }
+
+    window.requestAnimationFrame(() => {
+        animate(
+            it,
+            draw_func,
+            check_in_viewport,
+            subscribers,
+            last_run_time,
+            created_new
+        );
+    });
 }
 
 async function new_iterator(
-    cur_time: number,
-    map: L.Map,
-    clear_func: Function
-) {
-    const it = await PlaybackIterator.construct(
-        {
-            min: Math.round(cur_time) - 100,
-            max: Math.round(cur_time) + 5000,
-        },
-        map
-    );
+    oldit: PlaybackIterator
+): Promise<PlaybackIterator> {
+    const desired_max = Math.round(oldit.cur_time) + 5000;
+    const it = await PlaybackIterator.construct({
+        min: Math.round(oldit.cur_time) - 50,
+        max: desired_max,
+    });
 
-    it.cur_time = cur_time - 1;
-
-    console.log("Starting new iterator");
-    animate_recurse(it, map, false, clear_func);
+    it.cur_time = oldit.cur_time - 1;
+    return it;
 }

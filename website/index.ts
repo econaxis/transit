@@ -1,8 +1,19 @@
 import * as L from "leaflet";
-import { Browser } from "leaflet";
 import "leaflet-imageoverlay-rotated";
 import { PlaybackIterator } from "./playback_machine";
 import { animate } from "./streaming_animator";
+import {
+    DrawableObject,
+    OffsetCalculator,
+    render_objects,
+} from "./canvas_renderer";
+import check_in_view = OffsetCalculator.check_in_view;
+import { subscr as TimeSubscriber } from "./AnimationTimeDisplay";
+
+export type AnimSubscriber = (
+    drawables: Array<DrawableObject>,
+    sim_time: number
+) => void;
 
 export interface Positions {
     veldata: L.LatLng;
@@ -16,12 +27,6 @@ export interface Positions {
     headsign?: string;
 }
 
-interface VehicleHistory {
-    timestamp: number;
-    latitude: number;
-    longitude: number;
-}
-
 export function rootapiurl(str) {
     return "http://localhost:5000" + str;
 }
@@ -32,8 +37,6 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(map);
-
-let headsigns = undefined;
 
 /**
  * Downloads the initial positions data of all the buses from API.
@@ -47,11 +50,6 @@ async function download_positions_data() {
     ).then((r) => r.json())) as Array<Positions>;
 }
 
-function append_transform(layer: any, transform: string) {
-    layer._custom.transform += transform;
-    layer._image.style.transform += layer._custom.transform;
-}
-
 // LiveReloader.init(map)
 //     .then(() => download_positions_data())
 //     .then((d) => LiveReloader.register_live_reloading(20000000))
@@ -60,21 +58,7 @@ function append_transform(layer: any, transform: string) {
 //         debugger;
 //     });
 
-let canvas_inner_offset = new L.Point(0, 0);
-let canvas_outer_offset = new L.Point(0, 0);
-
-function move_canvas_to_viewport() {
-    canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    canvas_inner_offset = canvas_inner_offset.add(canvas_outer_offset);
-    canvas_outer_offset = new L.Point(0, 0);
-    canvas.style.transform = "";
-}
-
-map.on("moveend", move_canvas_to_viewport);
-
 function create_canvas(map: L.Map) {
-    const pane = document.getElementById("mapid");
     const size = map.getSize();
     const canvas = document.createElement("canvas");
     canvas.id = "canvas";
@@ -84,69 +68,41 @@ function create_canvas(map: L.Map) {
     canvas.style.border = "5px solid";
     canvas.style.position = "absolute";
 
-    pane.appendChild(canvas);
-
-    map.on("move", (evt) => {
-        const offset = map
-            .getPixelOrigin()
-            .subtract(map.getPixelBounds().min)
-            .subtract(canvas_inner_offset);
-        canvas_outer_offset = offset;
-        canvas.style.transform = `translate(${canvas_outer_offset.x}px, ${canvas_outer_offset.y}px`;
-    });
-
     return { canvas_ctx: canvas.getContext("2d"), canvas: canvas };
 }
 
 const { canvas_ctx, canvas } = create_canvas(map);
+document.getElementById("mapid").appendChild(canvas);
+
+OffsetCalculator.register_canvas_move_handlers(map, canvas_ctx, canvas);
+
+
+const canvas_margin = 1/5;
 const canvas_bounds = new L.Bounds([
-    L.point(0, 0),
-    L.point(canvas.width, canvas.height),
+    L.point(-canvas.width* canvas_margin, -canvas.height* canvas_margin),
+    L.point(canvas.width * (1+canvas_margin), canvas.height * (1+canvas_margin)),
 ]);
 
-const windglob = window as any;
-windglob.pause = false;
-windglob.angle = 0;
-
-export function draw_image_to_canvas(
-    image: HTMLImageElement,
-    position: L.Point,
-    angle: number
-) {
-    const predicted_pt = position.add(
-        L.point(canvas_inner_offset.x, canvas_inner_offset.y)
-    );
-    if (!canvas_bounds.contains(predicted_pt)) return;
-
-
-    canvas_ctx.save();
-    // canvas_ctx.translate(canvas_inner_offset.x, canvas_inner_offset.y);
-    canvas_ctx.translate(
-        predicted_pt.x + image.width / 2,
-        predicted_pt.y + image.height / 2
-    );
-    canvas_ctx.rotate(Math.PI + angle);
-    canvas_ctx.translate(-image.width / 2, -image.height / 2);
-    canvas_ctx.drawImage(image, 0, 0, image.width, image.height);
-    canvas_ctx.restore();
-}
+(window as any).pause = false;
 
 async function start() {
-    const it = await PlaybackIterator.construct(
-        {
-            min: Math.round(new Date().getTime() / 1000) - 3600 * 30,
-            max: Math.round(new Date().getTime() / 1000 - 3000 * 29.998),
-        },
-        map
-    );
-
-    function sleep(time) {
-        return new Promise((resolve) => setTimeout(resolve, time));
-    }
-
-    animate(it, map, () => {
-        canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const it = await PlaybackIterator.construct({
+        min: Math.round(new Date().getTime() / 1000) - 3600 * 3,
+        max: Math.round(new Date().getTime() / 1000 - 3600 * 2.8),
     });
+
+    animate(
+        it,
+        (objects) => {
+            canvas_ctx.resetTransform();
+            canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
+            render_objects(canvas_ctx, map, objects);
+        },
+        (pos) => {
+            return check_in_view(map, pos, canvas_bounds);
+        },
+        [TimeSubscriber]
+    );
 }
 
 start();
