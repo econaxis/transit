@@ -4,12 +4,15 @@ import redis
 from flask import request
 from flask_cors import CORS
 import psycopg2
+import pyodbc
 import psycopg2.extras
 from datetime import datetime
 
-sqlconn = psycopg2.connect(host = "henry-80q7.local", user = "transit", dbname = "transit", password = "transit")
+sqlconn = psycopg2.connect(host="henry-80q7.local", user="transit", dbname="transit", password="transit")
+# sqlconn = pyodbc.connect(
+#     "Driver={ODBC Driver 17 for SQL Server};Server=tcp:translink-transit.database.windows.net,1433;Database=transit;Uid=martinliu24;Pwd=LakxXp46LHCvTTL$;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;")
+cur = sqlconn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor)
 
-cur = sqlconn.cursor(cursor_factory = psycopg2.extras.NamedTupleCursor)
 redis = redis.StrictRedis(host="redis-18070.c53.west-us.azure.cloud.redislabs.com", port=18070,
                           password="nhWkkCADbwbFrLG9dVjFzPOqCWcQJ6LZ")
 
@@ -30,8 +33,8 @@ def parse_realtime_pos_to_response(result):
 def positions_updates():
     query = """
 select * from (
-              select TOP 1 update_iteration from realtime ORDER BY update_iteration desc
-                  ) maxtime INNER JOIN realtime ON maxtime.update_iteration = realtime.update_iteration
+              select update_iteration from realtime ORDER BY update_iteration desc
+                  ) maxtime INNER JOIN realtime ON maxtime.update_iteration = realtime.update_iteration LIMIT 1
     """
     cur.execute(query)
     result = cur.fetchall()
@@ -53,14 +56,14 @@ from realtime
      on temp.vehicle_id = realtime.vehicle_id and temp.maxtimestamp = realtime.timestamp
     """
 
-    result = cur.execute(query, cutofftime)
+    cur.execute(query, cutofftime)
     result = cur.fetchall()
     return parse_realtime_pos_to_response(result)
 
 
 @app.route("/headsigns")
 def headsigns():
-    result = cur.execute("""
+    cur.execute("""
     select * from headsigns
     """)
     result = cur.fetchall()
@@ -74,7 +77,7 @@ def history():
     cur = sqlconn.cursor()
     vehicleid = request.args.get("vehicleid")
 
-    result = cur.execute("""
+    cur.execute("""
         with maxtripid (trip_id, vehicle_id) as
             (select TOP 1 trip_id, vehicle_id from realtime where vehicle_id=? ORDER BY realtime.timestamp DESC)
         

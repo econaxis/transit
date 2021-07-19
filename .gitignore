@@ -2,3 +2,9 @@ gtfs/**
 transit.db
 .idea
 .venv/**
+node_modules
+.funcignore
+.gitignore
+.prettierrc
+website/out
+website/dist

@@ -4,20 +4,29 @@ export function diff_latlng(a: L.LatLng, b: L.LatLng) {
     return L.latLng(a.lat - b.lat, a.lng - b.lng);
 }
 
-export interface HistoricalPosition {
+export class HistoricalPosition {
     position: L.LatLng;
     timestamp: number;
+
+    constructor(position, timestamp) {
+        this.timestamp = timestamp;
+        this.position = position;
+    }
 }
 
-export function create_image(position: L.LatLng, angle: number, map: L.Map) {
-    const image = new Image(30, 20);
-    image.src = "bus.png";
-    image.className = "bus-image";
-    image.style.position = "absolute";
-    // map.getPane("overlayPane").appendChild(image);
+namespace ImageGenerator {
+    let created = false;
+    let image = new Image(30, 30);
 
-    // update_image(image, position, angle, map);
-    return image;
+    export function get() {
+        if (!created) {
+            image.src = "bus.png";
+            image.className = "bus-image";
+            image.style.position = "absolute";
+            created = true;
+        }
+        return image;
+    }
 }
 
 export function get_angle(old_pos: L.LatLng, new_pos: L.LatLng) {
@@ -38,6 +47,12 @@ export function update_image(
     image.style.transform = `translate(${offset.x}px, ${offset.y}px) rotate(${angle}rad) rotate(180deg)`;
 }
 
+export enum SimulationIterResult {
+    SHOW,
+    NOSHOW,
+    INVALID
+}
+
 export class MyImageOverlay {
     private headsign: string;
     private positions: Array<HistoricalPosition>;
@@ -46,33 +61,21 @@ export class MyImageOverlay {
     public angle: number;
     public image: HTMLImageElement;
 
-    constructor(
-        positions: Array<HistoricalPosition>,
-        headsign: string,
-        map: L.Map
-    ) {
+    constructor(positions: Array<HistoricalPosition>, headsign: string) {
         this.positions = positions;
         this.curindex = 0;
         this.headsign = headsign;
 
         this.curpos = this.positions[0].position;
         this.angle = 0;
-        this.image = create_image(this.curpos, this.angle, map);
-
-        map.on("zoom", () => {
-            update_image(this.image, this.curpos, this.angle, map);
-        });
-    }
-
-    update(map: L.Map) {
-        update_image(this.image, this.curpos, this.angle, map);
+        this.image = ImageGenerator.get();
     }
 
     private advance_curindex_to_timestamp(timestamp: number) {
         let index = this.curindex;
         while (
             index + 1 < this.positions.length &&
-            this.positions[index + 1].timestamp <= timestamp
+            this.positions[index + 1].timestamp < timestamp
         ) {
             index++;
         }
@@ -97,10 +100,10 @@ export class MyImageOverlay {
 
         // Check that velocity makes sense
         // Velocity should be less than 20m/s (80km/h), if its more, then render only discrete points, don't interp.
-        if (pos1.distanceTo(pos2) / (time2 - time1) > 20) {
-            if (timestamp - time1 < time2 - timestamp) return pos1;
-            else return pos2;
-        }
+        // if (pos1.distanceTo(pos2) / (time2 - time1) > 20) {
+        //     if (timestamp - time1 < time2 - timestamp) return pos1;
+        //     else return pos2;
+        // }
 
         const newlat = pos1.lat + alpha * (pos2.lat - pos1.lat);
         const newlng = pos1.lng + alpha * (pos2.lng - pos1.lng);
@@ -108,23 +111,27 @@ export class MyImageOverlay {
         return L.latLng(newlat, newlng);
     }
 
-    show_to(timestamp: number) {
-        console.assert(
-            this.curindex <= 1 ||
-                this.positions[this.curindex - 1].timestamp <= timestamp
-        );
+    run_simulation_to(timestamp: number): SimulationIterResult {
+        // console.assert(
+        //     this.curindex <= 1 ||
+        //         this.positions[this.curindex - 1].timestamp <= timestamp
+        // );
 
         this.curindex = this.advance_curindex_to_timestamp(timestamp);
 
-        if (this.curindex >= this.positions.length) return false;
+        if (this.curindex > this.positions.length) return SimulationIterResult.INVALID;
 
-        if (this.positions[this.curindex].timestamp > timestamp) return true;
+        // If we haven't reached the timestamp yet (bus appears later on), don't show.
+        if (this.curindex === 0 &&this.positions[this.curindex].timestamp > timestamp) return SimulationIterResult.NOSHOW;
+
+        // If it's been 3 minutes until the last update, don't show.
+        if (this.positions[this.curindex].timestamp + 180 <  timestamp) return SimulationIterResult.NOSHOW;
 
         const new_position = this.run_interpolation(this.curindex, timestamp);
 
         if (!new_position.equals(this.curpos))
             this.angle = get_angle(this.curpos, new_position);
         this.curpos = new_position;
-        return true;
+        return SimulationIterResult.SHOW;
     }
 }
