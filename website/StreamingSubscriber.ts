@@ -4,9 +4,9 @@ import { PlaybackIterator } from "./playback_machine";
 async function new_iterator(
     oldit: PlaybackIterator
 ): Promise<PlaybackIterator> {
-    const desired_max = Math.round(oldit.cur_time) + 60 * 10;
+    const desired_max = Math.round(oldit.cur_time) + 60 * 5;
     const it = await PlaybackIterator.construct({
-        min: Math.round(oldit.cur_time) - 60 * 10,
+        min: Math.round(oldit.cur_time) - 60 * 5,
         max: desired_max,
     });
 
@@ -14,7 +14,6 @@ async function new_iterator(
     return it;
 }
 
-(window as any).s = [];
 export namespace StreamingSubscriber {
     export const handler: AnimSubscriber = (iterator): boolean => {
         if (iterator.get_proportion_left() < 0.15) {
@@ -28,11 +27,6 @@ export namespace StreamingSubscriber {
                     new Date(iterator.cur_time * 1000).toLocaleString()
                 );
                 newit.cur_time = iterator.cur_time;
-
-                (window as any).s.push({
-                    new: newit.copy(),
-                    old: iterator.copy(),
-                });
 
                 iterator.stop = true;
                 animate_with_default_canvas(newit);

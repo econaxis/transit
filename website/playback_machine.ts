@@ -37,7 +37,7 @@ function median(array) {
 
 export class PlaybackIterator {
     private readonly min: number;
-    public readonly buses: Array<MyImageOverlay>;
+    private buses: Array<MyImageOverlay>;
     public readonly max: number;
     public cur_time: number;
     public stop: boolean;
@@ -83,12 +83,12 @@ export class PlaybackIterator {
             return overlay;
         });
 
-        const timerange = {min: median(actual_timerange.min), max: median(actual_timerange.max)};
+        const timerange = {
+            min: median(actual_timerange.min),
+            max: median(actual_timerange.max),
+        };
 
-        console.log(
-            "Actual range: ",
-            timerange.max - timerange.min
-        );
+        console.log("Actual range: ", timerange.max - timerange.min);
 
         return new PlaybackIterator(timerange, buses);
     }
@@ -111,21 +111,27 @@ export class PlaybackIterator {
         return (this.max - this.cur_time) / (this.max - this.min);
     }
 
+    get_buses(): Readonly<Array<MyImageOverlay>> {
+        return this.buses;
+    }
+
     next(check_in_viewport: (pos: L.LatLng) => boolean): Array<DrawableBus> {
         if (this.cur_time > this.max) {
             throw Error("Playback iterator is not valid anymore");
         }
 
         this.cur_time += (window as any).UPDATE_INTERV;
-        const to_remove = Array<number>();
+        const to_remove = new Set<MyImageOverlay>();
 
         // todo: update to_remove properly in terms of should_continue
-        const drawables = this.buses.map((bus): null | DrawableBus => {
+        const drawables = this.buses.map((bus, index): null | DrawableBus => {
             if (check_in_viewport(bus.curpos)) {
                 const result = bus.run_simulation_to(this.cur_time);
 
                 if (result === SimulationIterResult.SHOW) {
                     return new DrawableBus(bus.curpos, bus.angle, bus.image);
+                } else if (result === SimulationIterResult.INVALID) {
+                    to_remove.add(bus);
                 }
                 // TODO: handle other cases too.
                 else return null;
@@ -139,7 +145,8 @@ export class PlaybackIterator {
 
         const drawables_nonnull = drawables.filter((bus) => bus != null);
 
-        // to_remove.forEach((key) => this.buses.re(key));
+        // Remove invalid entries
+        this.buses = this.buses.filter((bus) => !to_remove.has(bus));
 
         return drawables_nonnull;
     }

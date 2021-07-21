@@ -1,4 +1,5 @@
 import * as L from "leaflet";
+import * as C from "./CanvasInteractionHandler";
 import "leaflet-imageoverlay-rotated";
 import { PlaybackIterator } from "./playback_machine";
 import { animate } from "./streaming_animator";
@@ -10,6 +11,8 @@ import {
 import check_in_view = OffsetCalculator.check_in_view;
 import { subscr as TimeSubscriber } from "./AnimationTimeDisplay";
 import { StreamingSubscriber } from "./StreamingSubscriber";
+
+C.test.test_handler();
 
 export type AnimSubscriber = (
     iterator: PlaybackIterator,
@@ -32,13 +35,6 @@ export interface Positions {
 export function rootapiurl(str) {
     return "http://localhost:5000" + str;
 }
-
-const map = L.map("mapid").setView([49.25, -123], 14);
-
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
 
 /**
  * Downloads the initial positions data of all the buses from API.
@@ -73,42 +69,55 @@ function create_canvas(map: L.Map) {
     return { canvas_ctx: canvas.getContext("2d"), canvas: canvas };
 }
 
-const { canvas_ctx, canvas } = create_canvas(map);
-document.getElementById("mapid").appendChild(canvas);
-
-OffsetCalculator.register_canvas_move_handlers(map, canvas);
-
-const canvas_margin = 1 / 5;
-const canvas_bounds = new L.Bounds([
-    L.point(-canvas.width * canvas_margin, -canvas.height * canvas_margin),
-    L.point(
-        canvas.width * (1 + canvas_margin),
-        canvas.height * (1 + canvas_margin)
-    ),
-]);
+let canvas_ctx: CanvasRenderingContext2D;
+let canvas_bounds: L.Bounds;
+let map: L.Map;
 
 async function start() {
+    map = L.map("mapid").setView([49.25, -123], 14);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    const { canvas_ctx: cc, canvas } = create_canvas(map);
+    canvas_ctx = cc;
+    document.getElementById("mapid").appendChild(canvas);
+
+    OffsetCalculator.register_canvas_move_handlers(map, canvas);
+
+    const canvas_margin = 1 / 5;
+    canvas_bounds = new L.Bounds([
+        L.point(-canvas.width * canvas_margin, -canvas.height * canvas_margin),
+        L.point(
+            canvas.width * (1 + canvas_margin),
+            canvas.height * (1 + canvas_margin)
+        ),
+    ]);
+
     const it = await PlaybackIterator.construct({
-        min: Math.round(new Date().getTime() / 1000 - 3600 * 3.1),
-        max: Math.round(new Date().getTime() / 1000 - 3600 * 0.9),
+        min: Math.round(new Date().getTime() / 1000 - 3600 * 5.5),
+        max: Math.round(new Date().getTime() / 1000 - 3600 * 5.4),
     });
 
     animate_with_default_canvas(it);
 }
 
-export function draw_func(objects) {
+export function draw_func(map: L.Map) {
     canvas_ctx.resetTransform();
-    canvas_ctx.clearRect(0, 0, canvas.width, canvas.height);
-    render_objects(canvas_ctx, map, objects);
+    canvas_ctx.clearRect(
+        0,
+        0,
+        canvas_ctx.canvas.width,
+        canvas_ctx.canvas.height
+    );
+    return (objects) => render_objects(canvas_ctx, map, objects);
 }
-
-(window as any).df = draw_func;
-(window as any).awdf = animate_with_default_canvas;
 
 export function animate_with_default_canvas(it: PlaybackIterator) {
     animate(
         it,
-        draw_func,
+        draw_func(map),
         (pos) => {
             return check_in_view(map, pos, canvas_bounds);
         },
@@ -116,6 +125,7 @@ export function animate_with_default_canvas(it: PlaybackIterator) {
     );
 }
 
-start();
+// start();
+
 //@ts-ignore
 window.map = map;

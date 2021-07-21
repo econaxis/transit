@@ -1,12 +1,24 @@
 import * as L from "leaflet";
 
 export interface DrawableObject {
-    draw: (
-        canvas: CanvasRenderingContext2D,
-        map: L.Map
-    ) => void;
+    draw: (canvas: CanvasRenderingContext2D, map: L.Map) => void;
 }
 
+export function set_transform_from_matrix(
+    canvas: CanvasRenderingContext2D,
+    matrix: Array<number>
+) {
+    console.assert(matrix.length === 6);
+
+    canvas.setTransform(
+        matrix[0],
+        matrix[3],
+        matrix[1],
+        matrix[4],
+        matrix[2],
+        matrix[5]
+    );
+}
 
 export class DrawableBus implements DrawableObject {
     public readonly position: L.LatLng;
@@ -19,11 +31,11 @@ export class DrawableBus implements DrawableObject {
         this.image = image;
     }
 
-    draw(
-        canvas: CanvasRenderingContext2D,
-        map: L.Map
-    ): void {
-        const predicted_pt = OffsetCalculator.predict_pixel_location(this.position, map);
+    calculate_transform(map: L.Map): Array<number> {
+        const predicted_pt = OffsetCalculator.predict_pixel_location(
+            this.position,
+            map
+        );
 
         const rotation = Math.PI + this.angle;
         const cos = Math.cos(rotation);
@@ -46,19 +58,16 @@ export class DrawableBus implements DrawableObject {
 
         // prettier-ignore
         const matrix1 = [
-            1, 0, translation.x,
-            0, 1, translation.y,
+            this.image.width, 0, translation.x,
+            0, this.image.height, translation.y,
         ];
+        return matrix1;
+    }
 
-        canvas.setTransform(
-            matrix1[0],
-            matrix1[3],
-            matrix1[1],
-            matrix1[4],
-            matrix1[2],
-            matrix1[5]
-        );
-        canvas.drawImage(this.image, 0, 0, this.image.width, this.image.height);
+    draw(canvas: CanvasRenderingContext2D, map: L.Map): void {
+        const matrix = this.calculate_transform(map);
+        set_transform_from_matrix(canvas, matrix);
+        canvas.drawImage(this.image, 0, 0, 1, 1);
     }
 }
 
@@ -74,11 +83,14 @@ export namespace OffsetCalculator {
         canvas.style.transform = `translate(${canvas_outer_offset.x}px, ${canvas_outer_offset.y}px`;
     }
 
-    function aftermove(
-        canvas_ctx: CanvasRenderingContext2D,
-    ) {
+    function aftermove(canvas_ctx: CanvasRenderingContext2D) {
         canvas_ctx.resetTransform();
-        canvas_ctx.clearRect(0, 0, canvas_ctx.canvas.width, canvas_ctx.canvas.height);
+        canvas_ctx.clearRect(
+            0,
+            0,
+            canvas_ctx.canvas.width,
+            canvas_ctx.canvas.height
+        );
         canvas_inner_offset = canvas_inner_offset.add(canvas_outer_offset);
         canvas_outer_offset = new L.Point(0, 0);
         canvas_ctx.canvas.style.transform = "";
@@ -120,7 +132,7 @@ export namespace OffsetCalculator {
 }
 
 export function render_objects(
-    ctx:  CanvasRenderingContext2D,
+    ctx: CanvasRenderingContext2D,
     map: L.Map,
     objects: Array<DrawableObject>
 ) {

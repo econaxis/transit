@@ -4,11 +4,16 @@ import { AnimSubscriber } from "./index";
 
 const FRAMEINTERVAL = 1000 / 80;
 
+export function animate_with_defaults(it: PlaybackIterator) {
+    const empty = (...args) => true;
+    animate(it, empty, empty, [], 0, false);
+}
+
 export function animate(
     it: PlaybackIterator,
     draw_func: Function,
     check_in_viewport: (pos: L.LatLng) => boolean,
-    subscribers: Array<AnimSubscriber>,
+    subscribers: Array<AnimSubscriber> = [],
     last_run_time = 0,
     created_new = false
 ) {

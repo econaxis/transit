@@ -1,5 +1,85 @@
+import { set_transform_from_matrix } from "./canvas_renderer";
+
+type HoverMap = CanvasInteractionHandler.HoverMap;
+type Handler = CanvasInteractionHandler.Handler;
+type EventType = CanvasInteractionHandler.EventType;
+
+function default_hovermap(): CanvasInteractionHandler.HoverMap {
+    return new Map<number, CanvasInteractionHandler.Handler>();
+}
+
+function create_invis_canvas(
+    base_canvas: HTMLCanvasElement
+): HTMLCanvasElement {
+    const canvas = document.createElement("canvas");
+    canvas.id = "invis-canvas";
+    canvas.width = base_canvas.width;
+    canvas.height = base_canvas.height;
+    canvas.style.zIndex = "100000";
+    canvas.style.position = "absolute";
+    return canvas;
+}
+
+class CanvasInteractionHandler {
+    cur_number = 2;
+    hovermap: CanvasInteractionHandler.HoverMap = default_hovermap();
+    canvas: CanvasRenderingContext2D;
+
+    constructor(base_canvas: HTMLCanvasElement, parent_elem: HTMLElement) {
+        const canvaselem = create_invis_canvas(base_canvas);
+
+        parent_elem.appendChild(canvaselem);
+
+        this.canvas = canvaselem.getContext("2d");
+    }
+
+    register_interaction(
+        type: CanvasInteractionHandler.EventType,
+        transform: Array<number>,
+        handler: CanvasInteractionHandler.Handler
+    ) {
+        if (type != CanvasInteractionHandler.EventType.HoverIn) {
+            throw Error("Not implemented");
+        }
+
+        this.cur_number++;
+        this.hovermap.set(this.cur_number, handler);
+
+        const b = this.cur_number & 0x0000ff;
+        const g = this.cur_number & 0x00ff00;
+        const r = this.cur_number & 0xff0000;
+
+        set_transform_from_matrix(this.canvas, transform);
+        this.canvas.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        console.log(this.canvas.fillStyle);
+        this.canvas.fillRect(0, 0, 1, 1);
+
+
+        (window as any).canvas = this.canvas;
+    }
+
+    private canvas_mouseover_handler( evt: MouseEvent) {
+        const x = evt.offsetX;
+        const y = evt.offsetY;
+
+        const [r, g, b] = this.canvas.getImageData(x, y, 1, 1).data.slice(0, 3);
+
+        const int24 = (r << 16) + (g << 8) + b;
+
+        const res = this.hovermap.get(int24);
+
+        if (res) res(CanvasInteractionHandler.EventType.HoverIn, evt);
+        else if (int24 !== 0) console.log("Color not found", int24);
+    }
+
+
+    register_event_listeners() {
+        this.canvas.canvas.addEventListener("mousemove", (evt) => this.canvas_mouseover_handler(evt));
+    }
+}
+
 namespace CanvasInteractionHandler {
-    type HoverMap = Map<number, Handler>;
+    export type HoverMap = Map<number, Handler>;
 
     export enum EventType {
         HoverIn,
@@ -11,69 +91,25 @@ namespace CanvasInteractionHandler {
         event_type: EventType,
         mouse_data: MouseEvent
     ) => void;
+}
 
-    let cur_number = 0;
+export namespace test {
+    export function test_handler() {
+        console.log("test handler")
+        const map = document.getElementById("mapid");
+        const basecanvas = document.createElement("canvas");
+        basecanvas.width = 500;
+        basecanvas.height = 500;
 
-    export function default_hovermap(): HoverMap {
-        return new Map<number, Handler>();
-    }
+        const c = new CanvasInteractionHandler(basecanvas, map);
+        c.register_event_listeners();
 
-    function create_invis_canvas(
-        base_canvas: HTMLCanvasElement
-    ): HTMLCanvasElement {
-        const canvas = new HTMLCanvasElement();
-        canvas.id = "invis-canvas";
-        canvas.width = base_canvas.width;
-        canvas.height = base_canvas.height;
-        canvas.style.zIndex = "0";
-        canvas.style.position = "absolute";
-        return canvas;
-    }
+        //prettier-ignore
+        const matrix = [
+            10, 0, 100,
+            0, 15, 200,
+        ];
 
-    export function register_invis_canvas(
-        base_canvas: HTMLCanvasElement,
-        parent_elem: HTMLElement
-    ) {
-        parent_elem.appendChild(create_invis_canvas(base_canvas));
-    }
-
-    export function register_interaction(
-        hovermap: HoverMap,
-        canvas: CanvasRenderingContext2D,
-        type: EventType,
-        rect_bounds: L.Bounds,
-        handler: Handler
-    ) {
-        if (hovermap == null) hovermap = default_hovermap();
-
-        if (type != EventType.HoverIn) {
-            throw Error("Not implemented");
-        }
-
-        cur_number++;
-        hovermap.set(cur_number, handler);
-
-        const r = cur_number & 0x0000ff;
-        const g = cur_number & 0x00ff00;
-        const b = cur_number & 0xff0000;
-        const alpha = 0xff;
-
-        canvas.fillRect(rect_bounds.getTopLeft().x, rect_bounds.getTopLeft().y, rect_bounds.getSize().x, rect_bounds.getSize().y);
-        canvas.fillStyle = "black";
-    }
-
-    export function canvas_mouseover_handler(
-        hovermap: HoverMap,
-        ctx: CanvasRenderingContext2D,
-        evt: MouseEvent
-    ) {
-        const x = evt.offsetX;
-        const y = evt.offsetY;
-
-        const [r, g, b] = ctx.getImageData(x, y, 1, 1).data.slice(0, 3);
-
-        const int24 = (r << (16 + g)) << (8 + b);
-
-        hovermap.get(int24)(EventType.HoverIn, evt);
+        c.register_interaction(CanvasInteractionHandler.EventType.HoverIn, matrix, () => {console.log("Touched!")});
     }
 }
