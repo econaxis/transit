@@ -8,16 +8,44 @@
 
     <title>Title</title>
     <link rel="stylesheet" href="main.css">
-
+    <script src="appearance.js"></script>
 </head>
 <body>
 <div id="mapid">
     <p id = "time"
             style="position: fixed; top: 30px; left: 200px; z-index: 1000; font-size: x-large; background-color: lightyellow; padding: 5px; border-radius: 10px">
         test</p>
+    
+    <div id="bottom-controls">
+        <div id="bump-container">
+        <div id="bump">
+            <svg viewBox="0 0 120 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M60 0C35.4 1.34526e-10 36 24 0 24H120C84 24 84.6 -1.34526e-10 60 0Z"/>
+            </svg>
+        </div>
+    </div>
+
+        <div id="progress">
+            <input id="time-slider" type="range" step=0.01 min=0 max=100>
+        </div>
+        <div id="inputs">
+            <div>Play/Pause</div>
+            <div>Timer</div>
+        </div>
+    </div>
+
+<svg width="0" height="0">
+    <defs>
+      <clipPath id="myClip">
+        <path d="M60 0C35.4 1.34526e-10 36 24 0 24H120C84 24 84.6 -1.34526e-10 60 0Z" fill="#FFFFFFBF"/>
+      </clipPath>
+    </defs>
+  </svg>
 </div>
 
+
 <script src="dist/index.js"></script>
+<script src="timeInput.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,31 @@
-#mapid { height: 100vh; width: 100vw; }
+:root {
+    --background: #FFFFFFbf;
+    --background-solid: #FFFFFF;
+    --accent: #555555;
+}
+  
+[data-theme='dark'] {
+    --background: #3333335f;
+    --background-solid: #333333;
+    --accent: #dddddd;
+    --text-color-normal: hsl(210, 10%, 62%);
+    --text-color-light: hsl(210, 15%, 35%);
+    --text-color-richer: hsl(210, 50%, 72%);
+    --text-color-highlight: hsl(25, 70%, 45%);
+}
+
+body {
+    margin: 0; /* dk if henry needs the margin, comment out when needed */
+    overflow: hidden;
+}
+
+#mapid { 
+    height: 100vh; 
+    width: 100vw; 
+    background-color: gray;
+    background-image: url("https://images.unsplash.com/photo-1530813089459-29f31dd229c2?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MjB8fHNxdWFyZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=1000&q=80");
+    background-size: 100vw 100vh;
+}
 
 .overlay {
     padding: 1px;
@@ -26,4 +53,80 @@
 }
 #canvas {
     z-index: 401;
+}
+
+#bottom-controls{
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    align-items: stretch;
+
+    position: absolute;
+    bottom: 0;/*bottom: -30px;*/
+
+    /*clip-path: url(#myClip);*/
+}
+
+#bump-container {
+    height: 2.35vmax;
+    max-height: 28px;
+    width: max(calc(100vw - 12vmax), calc(100vw - 140px));
+    z-index: 1;
+}
+
+#bump, #bump > svg {
+    height: 2.4vmax;
+    max-height: 28px;
+    width: 12vmax;
+    max-width: 140px;
+}
+
+#bump {
+    position: relative;
+    left: 30px;
+}
+
+#bump > svg {
+    fill: var(--background-solid);
+}
+
+#progress {
+    width: 100%;
+    background-color: var(--background-solid);
+    z-index: 5;
+}
+
+#time-slider {
+    -webkit-appearance: none;  /* Override default CSS styles */
+    appearance: none;
+    margin: 0;
+    height: 1px;
+    margin: 0 min(4.5vmax, 52.5px);
+    width: max(calc(100vw - 9vmax), calc(100vw - 105px));
+}
+
+#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;  /* Override default CSS styles */
+    appearance: none;
+    /*background-image: url('assets/slider-thumb.svg');
+    background-position: 0 0;
+    width: 120px;
+    height: 47px;*/
+    width: 3vmax;
+    max-width: 35px; /* check for mobile touch target sizes */
+    height: 3vmax;
+    max-height: 35px;
+    border-radius: 2vmax;
+    margin-bottom: min(3vmax, 35px);
+    background-color: var(--accent);
+    cursor: pointer;
+    z-index: 5;
+}
+
+#inputs {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+
+    background-color: var(--background-solid);
 }
