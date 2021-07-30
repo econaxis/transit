@@ -1,5 +1,5 @@
 :root {
-    --background: #FFFFFFbf;
+    --background: #FFFFFFaf;
     --background-solid: #FFFFFF;
     --accent: #555555;
 }
@@ -17,6 +17,7 @@
 body {
     margin: 0; /* dk if henry needs the margin, comment out when needed */
     overflow: hidden;
+    width: 100vw;
 }
 
 #mapid { 
@@ -68,25 +69,29 @@ body {
 }
 
 #bump-container {
-    height: 2.35vmax;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 6vmax; /* fix truncated height */
     max-height: 28px;
     width: max(calc(100vw - 12vmax), calc(100vw - 140px));
     z-index: 1;
 }
 
 #bump, #bump > svg {
-    height: 2.4vmax;
     max-height: 28px;
     width: 12vmax;
     max-width: 140px;
 }
 
 #bump {
+    height: 2.355vmax;
     position: relative;
     left: 30px;
 }
 
 #bump > svg {
+    height: 2.4vmax;
     fill: var(--background-solid);
 }
 
@@ -99,10 +104,10 @@ body {
 #time-slider {
     -webkit-appearance: none;  /* Override default CSS styles */
     appearance: none;
-    margin: 0;
     height: 1px;
     margin: 0 min(4.5vmax, 52.5px);
     width: max(calc(100vw - 9vmax), calc(100vw - 105px));
+    background-color: var(--accent); /* need to fix ux of clicking outside the slider area so that it goes to one end */
 }
 
 #time-slider::-webkit-slider-thumb {
@@ -121,6 +126,27 @@ body {
     background-color: var(--accent);
     cursor: pointer;
     z-index: 5;
+}
+
+.tooltip {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+
+    background-color: var(--background);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 10px;
+}
+
+#slider-pos {
+    position: relative;
+    max-width: 150px;
+    max-height: 50px;
+    padding: 6px;
+    margin: 4px;
 }
 
 #inputs {
