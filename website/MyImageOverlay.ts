@@ -50,7 +50,7 @@ export function update_image(
 export enum SimulationIterResult {
     SHOW,
     NOSHOW,
-    INVALID
+    INVALID,
 }
 
 export class MyImageOverlay {
@@ -99,11 +99,10 @@ export class MyImageOverlay {
         const pos2 = this.positions[old_index + 1].position;
 
         // Check that velocity makes sense
-        // Velocity should be less than 20m/s (80km/h), if its more, then render only discrete points, don't interp.
-        // if (pos1.distanceTo(pos2) / (time2 - time1) > 20) {
-        //     if (timestamp - time1 < time2 - timestamp) return pos1;
-        //     else return pos2;
-        // }
+        if (pos1.distanceTo(pos2)  > 100) {
+            if (timestamp - time1 < time2 - timestamp) return pos1;
+            else return pos2;
+        }
 
         const newlat = pos1.lat + alpha * (pos2.lat - pos1.lat);
         const newlng = pos1.lng + alpha * (pos2.lng - pos1.lng);
@@ -119,13 +118,19 @@ export class MyImageOverlay {
 
         this.curindex = this.advance_curindex_to_timestamp(timestamp);
 
-        if (this.curindex > this.positions.length) return SimulationIterResult.INVALID;
+        if (this.curindex > this.positions.length)
+            return SimulationIterResult.INVALID;
 
         // If we haven't reached the timestamp yet (bus appears later on), don't show.
-        if (this.curindex === 0 &&this.positions[this.curindex].timestamp > timestamp) return SimulationIterResult.NOSHOW;
+        if (
+            this.curindex === 0 &&
+            this.positions[this.curindex].timestamp > timestamp
+        )
+            return SimulationIterResult.NOSHOW;
 
         // If it's been 3 minutes until the last update, don't show.
-        if (this.positions[this.curindex].timestamp + 180 <  timestamp) return SimulationIterResult.NOSHOW;
+        if (this.positions[this.curindex].timestamp + 180 < timestamp)
+            return SimulationIterResult.NOSHOW;
 
         const new_position = this.run_interpolation(this.curindex, timestamp);
 

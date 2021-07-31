@@ -12,7 +12,7 @@ import check_in_view = OffsetCalculator.check_in_view;
 import { subscr as TimeSubscriber } from "./AnimationTimeDisplay";
 import { StreamingSubscriber } from "./StreamingSubscriber";
 
-C.test.test_handler();
+// C.test.test_handler();
 
 export type AnimSubscriber = (
     iterator: PlaybackIterator,
@@ -103,6 +103,7 @@ async function start() {
     animate_with_default_canvas(it);
 }
 
+
 export function draw_func(map: L.Map) {
     canvas_ctx.resetTransform();
     canvas_ctx.clearRect(
@@ -125,7 +126,7 @@ export function animate_with_default_canvas(it: PlaybackIterator) {
     );
 }
 
-// start();
+start();
 
 //@ts-ignore
 window.map = map;
