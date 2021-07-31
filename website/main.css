@@ -73,8 +73,12 @@ body {
 
     /*clip-path: url(#myClip);*/
     z-index: 2;
-    font-size: 13px;
+    font-size: 13px !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+input {
+    font-size: 1em; /* override default input font size to match bottom control font size */
 }
 
 #bump-container {
@@ -82,15 +86,15 @@ body {
     flex-direction: column;
     justify-content: flex-end;
     height: 6vmax; /* fix truncated height */
-    max-height: 28px;
-    width: max(calc(100vw - 12vmax), calc(100vw - 140px));
+    max-height: 1.6em;
+    width: max(calc(100vw - 12vmax), calc(100vw - 8em));
     z-index: 1;
 }
 
 #bump, #bump > svg {
-    max-height: 28px;
+    max-height: 1.6em;
     width: 12vmax;
-    max-width: 140px;
+    max-width: 8em;
 }
 
 #bump {
@@ -113,9 +117,9 @@ body {
 #time-slider {
     -webkit-appearance: none;  /* Override default CSS styles */
     appearance: none;
-    height: 0px;
-    margin: 0 min(4.5vmax, 52.5px);
-    width: max(calc(100vw - 9vmax), calc(100vw - 105px));
+    height: 0;
+    margin: 0 min(4.5vmax, 3em);
+    width: max(calc(100vw - 9vmax), calc(100vw - 6em));
     background-color: var(--accent); /* need to fix ux of clicking outside the slider area so that it goes to one end */
 }
 
@@ -127,12 +131,12 @@ body {
     width: 120px;
     height: 47px;*/
     width: 3vmax;
-    max-width: 35px; /* check for mobile touch target sizes */
+    max-width: 2em;
     height: 3vmax;
-    max-height: 35px;
+    max-height: 2em;
     border-radius: 2vmax;
     position: relative;
-    bottom: min(1.5vmax, 17.5px);
+    bottom: min(1.5vmax, 1em);
     background-color: var(--accent);
     cursor: pointer;
     z-index: 5;

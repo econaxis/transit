@@ -18,7 +18,7 @@ function vh(v) {
   }
 
 window.addEventListener("mousemove", (event) => {
-    if(event.clientY > vh(75)) {
+    if(event.clientY > vh(65)) {
         document.querySelector("#button-controls").style.maxHeight = "100%";
         document.querySelector("#button-controls").style.display = "flex";
     } else {
@@ -80,6 +80,8 @@ const pickerItems = document.querySelectorAll(".picker > *:not(#picker-highlight
 const pickerSize = pickerItems.length;
 const pickerHighlight = document.querySelector("#picker-highlight");
 
+//  TODO fallback for narrow screen width
+
 for(let i=0; i<pickerSize; i++){
     let item = pickerItems[i];
     console.log(item);
@@ -90,7 +92,8 @@ for(let i=0; i<pickerSize; i++){
         console.log(pickerHighlight.style.right, x2);
         console.log(i);
         let strX = pickerHighlight.style.left || "60px";
-        strX = strX.substring(0, strX.length-2);
+        strX = parseFloat(strX);
+        console.log(strX);
         if (strX <= x1) {
             pickerHighlight.style.transition = "right 0.5s, left 0.5s ease-out 0.35s";
             pickerHighlight.style.right = x2 + "px";

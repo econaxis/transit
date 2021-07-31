@@ -20,9 +20,16 @@ function vmax(v) {
   return Math.max(vh(v), vw(v));
 }
 
+function em(v) {
+  let em = parseFloat(getComputedStyle(document.querySelector("#bottom-controls")).fontSize);
+  return v*em;
+}
+
 const timeSlider = document.querySelector('#time-slider');
-var timeSliderWidth = timeSlider.clientWidth - Math.min(vmax(3), 35) / 2; //real slider range is slider width minus thumb width
-var timeSliderMargin = Math.min(vmax(6), 70);
+var timeSliderWidth = timeSlider.clientWidth - Math.min(vmax(3), em(2)); //real slider range is slider width minus thumb width
+var timeSliderMargin = Math.min(vmax(6), em(4));
+console.log(Math.min(vmax(3), em(2)));
+console.log(timeSlider.clientWidth, timeSliderWidth + timeSliderMargin, timeSliderWidth, timeSlider.offsetWidth);
 
 const bump = document.querySelector('#bump');
 bump.style.left = "100%";
@@ -31,10 +38,9 @@ const timeTooltip = document.querySelector("#slider-pos");
 timeTooltip.innerHTML = timeSlider.value;
 timeTooltip.style.left = (vw(100) - 150 - 20) +"px";
 
-timeSlider.addEventListener('resize', (event) => {
+window.addEventListener('resize', (event) => {
   timeSliderWidth = timeSlider.clientWidth;
-  timeSliderMargin = Math.min(vmax(6), 70);
-
+  timeSliderMargin = Math.min(vmax(6), em(4));
 })
 // should we render/fetch data whenever/whereever the user drags or should we do it only when user releases the knob
 timeSlider.addEventListener('change', (event) => {
