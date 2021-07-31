@@ -25,10 +25,11 @@ var timeSliderWidth = timeSlider.clientWidth - Math.min(vmax(3), 35) / 2; //real
 var timeSliderMargin = Math.min(vmax(6), 70);
 
 const bump = document.querySelector('#bump');
-bump.style.left = timeSlider.value + "%";
+bump.style.left = "100%";
 
 const timeTooltip = document.querySelector("#slider-pos");
 timeTooltip.innerHTML = timeSlider.value;
+timeTooltip.style.left = (vw(100) - 150 - 20) +"px";
 
 timeSlider.addEventListener('resize', (event) => {
   timeSliderWidth = timeSlider.clientWidth;
