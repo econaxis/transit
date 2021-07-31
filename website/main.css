@@ -2,12 +2,14 @@
     --background: #FFFFFFaf;
     --background-solid: #FFFFFF;
     --accent: #555555;
+    --accent-transparent: #5555552f;
 }
   
 [data-theme='dark'] {
     --background: #3333335f;
     --background-solid: #333333;
     --accent: #dddddd;
+    --aceent-transparent: #dddddd2f;
     --text-color-normal: hsl(210, 10%, 62%);
     --text-color-light: hsl(210, 15%, 35%);
     --text-color-richer: hsl(210, 50%, 72%);
@@ -122,7 +124,8 @@ body {
     height: 3vmax;
     max-height: 35px;
     border-radius: 2vmax;
-    margin-bottom: min(3vmax, 35px);
+    position: relative;
+    bottom: min(1.5vmax, 17.5px);
     background-color: var(--accent);
     cursor: pointer;
     z-index: 5;
@@ -149,10 +152,40 @@ body {
     margin: 4px;
 }
 
-#inputs {
+#button-controls {
     display: flex;
     flex-direction: row;
-    width: 100%;
+    justify-content: start;
+    align-items: center;
 
+    width: 100%;
+    padding: 5px 0;
     background-color: var(--background-solid);
+}
+
+.button-control-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border-radius: 5px;
+}
+
+.button-control-icon-container:hover {
+    background-color: var(--accent-transparent);
+}
+
+.button-control-icon {
+    width: 20px;
+    height: 20px;
+    fill: var(--accent);
+}
+
+#play-pause > svg{
+    width: 40px;
+    height: 40px;
+    fill: var(--accent);
 }
