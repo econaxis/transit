@@ -1,3 +1,32 @@
+//some units
+function vh(v) {
+    var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    return (v * h) / 100;
+  }
+  
+  function vw(v) {
+    var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    return (v * w) / 100;
+  }
+  
+  function vmin(v) {
+    return Math.min(vh(v), vw(v));
+  }
+  
+  function vmax(v) {
+    return Math.max(vh(v), vw(v));
+  }
+
+window.addEventListener("mousemove", (event) => {
+    if(event.clientY > vh(75)) {
+        document.querySelector("#button-controls").style.maxHeight = "100%";
+        document.querySelector("#button-controls").style.display = "flex";
+    } else {
+        document.querySelector("#button-controls").style.maxHeight = 0;
+        document.querySelector("#button-controls").style.display = "none";
+    }
+});
+
 const playPause = document.querySelector("#play-pause");
 
 playPause.addEventListener("click", ()=> {
