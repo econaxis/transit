@@ -6,10 +6,10 @@
 }
   
 [data-theme='dark'] {
-    --background: #3333335f;
+    --background: #3333338f;
     --background-solid: #333333;
-    --accent: #dddddd;
-    --aceent-transparent: #dddddd2f;
+    --accent: #cccccc;
+    --accent-transparent: #cccccc2f;
     --text-color-normal: hsl(210, 10%, 62%);
     --text-color-light: hsl(210, 15%, 35%);
     --text-color-richer: hsl(210, 50%, 72%);
@@ -20,6 +20,7 @@ body {
     margin: 0; /* dk if henry needs the margin, comment out when needed */
     overflow: hidden;
     width: 100vw;
+    color: var(--accent)
 }
 
 #mapid { 
@@ -68,6 +69,7 @@ body {
     bottom: 0;/*bottom: -30px;*/
 
     /*clip-path: url(#myClip);*/
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 #bump-container {
@@ -106,7 +108,7 @@ body {
 #time-slider {
     -webkit-appearance: none;  /* Override default CSS styles */
     appearance: none;
-    height: 1px;
+    height: 0px;
     margin: 0 min(4.5vmax, 52.5px);
     width: max(calc(100vw - 9vmax), calc(100vw - 105px));
     background-color: var(--accent); /* need to fix ux of clicking outside the slider area so that it goes to one end */
@@ -129,6 +131,10 @@ body {
     background-color: var(--accent);
     cursor: pointer;
     z-index: 5;
+    -webkit-transition: left 2s ease-out;
+    -moz-transition: left 2s ease-out;
+    -o-transition: left 2s ease-out;
+    transition: left 2s ease-out;
 }
 
 .tooltip {
@@ -163,6 +169,13 @@ body {
     background-color: var(--background-solid);
 }
 
+.expandable-control {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+}
+
 .button-control-icon-container {
     display: flex;
     align-items: center;
@@ -189,3 +202,65 @@ body {
     height: 40px;
     fill: var(--accent);
 }
+
+.expandable-control > *:not(:first-child){
+    max-width: 100%;
+    transition: max-width 0.2s linear;
+}
+
+.expandable-control > *:not(:first-child) > *{
+    opacity: 1;
+    transition: opacity 0.5s 0.2s;
+}
+
+.picker {
+    display: flex;
+    flex-direction: row;
+    border-radius: 30px;
+    background-color: var(--accent-transparent);
+    margin: 0 5px;
+    position: relative;
+    left: 0;
+}
+
+.picker > * {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    border-radius: 30px;
+}
+
+.picker > *:not(#picker-highlight) {
+    padding: 4px;
+    margin: 0px;
+    width: 52px;    
+    cursor: pointer;
+    z-index: 3;
+}
+
+#picker-highlight {
+    position: absolute;
+    left: 60px;
+    right: 300px;
+    background-color: var(--accent-transparent);
+    height: 100%;
+    z-index: 0;
+}
+
+.picker.hidden {
+    max-width: 0 !important;
+    overflow: hidden;
+    transition: max-width 0.2s linear 0.2s;
+}
+
+.picker.hidden > *:not(#picker-highlight) {
+    opacity: 0 !important;    
+    transition: opacity 0.5s;
+}
+
+.picker.hidden > #picker-highlight {
+    opacity: 0 !important;    
+    transition: opacity 0.5s 0.5s;
+}
+
+/* TODO fix init positions to prevent flicker*/

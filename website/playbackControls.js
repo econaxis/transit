@@ -15,3 +15,69 @@ playPause.addEventListener("click", ()=> {
     }
     console.log("clicked");
 })
+
+const expandableControl = document.querySelectorAll(".expandable-control");
+console.log(expandableControl)
+expandableControl.forEach((c) => {
+    c.addEventListener("mouseenter", (event) => {
+        let expandingElements = event.target.children;
+        for(let i = 1; i < expandingElements.length; i++){
+            expandingElements[i].classList.remove("hidden");
+        }
+    });
+    c.addEventListener("mouseleave", (event) => {
+        let expandingElements = event.target.children;
+        for(let i = 1; i < expandingElements.length; i++){
+            expandingElements[i].classList.add("hidden");
+        }
+    });
+
+    c.addEventListener("focus", (event) => {
+        let expandingElements = event.target.children;
+        for(let i = 1; i < expandingElements.length; i++){
+            expandingElements[i].classList.remove("hidden");
+        }
+    });
+
+    c.addEventListener("blur", (event) => {
+        let expandingElements = event.target.children;
+        for(let i = 1; i < expandingElements.length; i++){
+            expandingElements[i].classList.add("hidden");
+        }
+    });
+});
+
+const pickerItems = document.querySelectorAll(".picker > *:not(#picker-highlight)");
+const pickerSize = pickerItems.length;
+const pickerHighlight = document.querySelector("#picker-highlight");
+
+for(let i=0; i<pickerSize; i++){
+    let item = pickerItems[i];
+    console.log(item);
+    item.addEventListener("click", (event) => {
+        let x1 = 60*i;
+        let x2 = 60*(pickerSize - i -1);
+        console.log(pickerHighlight.style.left, x1);
+        console.log(pickerHighlight.style.right, x2);
+        console.log(i);
+        let strX = pickerHighlight.style.left || "60px";
+        strX = strX.substring(0, strX.length-2);
+        if (strX <= x1) {
+            pickerHighlight.style.transition = "right 0.5s, left 0.5s ease-out 0.35s";
+            pickerHighlight.style.right = x2 + "px";
+            pickerHighlight.style.left = x1 + "px";
+        } else {
+            pickerHighlight.style.transition = "left 0.5s, right 0.5s ease-out 0.35s";
+            pickerHighlight.style.left = x1 + "px";
+            pickerHighlight.style.right = x2 + "px";
+        }
+        console.log(pickerHighlight.style.transition);
+        pickerItems.forEach((i) => {
+            if (event.target = i) {
+                event.target.classList.add("selected");
+            } else {
+                event.target.classList.remove("selected");
+            }
+        })
+    });
+}
