@@ -28,9 +28,9 @@ const bump = document.querySelector('#bump');
 bump.style.left = timeSlider.value + "%";
 
 const timeTooltip = document.querySelector("#slider-pos");
-timeTooltip.innerHTML=timeSlider.value;
+timeTooltip.innerHTML = timeSlider.value;
 
-timeSlider.addEventListener('resize', (event)=> {
+timeSlider.addEventListener('resize', (event) => {
   timeSliderWidth = timeSlider.clientWidth;
   timeSliderMargin = Math.min(vmax(6), 70);
 
@@ -39,28 +39,27 @@ timeSlider.addEventListener('resize', (event)=> {
 timeSlider.addEventListener('change', (event) => {
   //const result = document.querySelector('.result');
   //result.textContent = `You like ${event.target.value}`;
- 
-  timeTooltip.style.display="none";
+
+  timeTooltip.style.display = "none";
   console.log();
   // do a delay for disappearing?
 });
 
 timeSlider.addEventListener('input', (event) => {
-    //const result = document.querySelector('.result');
-    //result.textContent = `You like ${event.target.value}`;
-    let target = event.target;
-    bump.style.left = target.value + "%";
-    timeTooltip.style.display="flex";
-    timeTooltip.innerHTML=target.value;
-    let tooltipX = Math.min(Math.max(0, target.value*timeSliderWidth/100 +timeSliderMargin - 75 - 14), vw(100) - 150 - 20) + "px";
-    timeTooltip.style.left = tooltipX;
-
+  //const result = document.querySelector('.result');
+  //result.textContent = `You like ${event.target.value}`;
+  let target = event.target;
+  bump.style.left = target.value + "%";
+  timeTooltip.style.display = "flex";
+  timeTooltip.innerHTML = target.value;
+  let tooltipX = Math.min(Math.max(0, target.value * timeSliderWidth / 100 + timeSliderMargin - 75 - 14), vw(100) - 150 - 20) + "px";
+  timeTooltip.style.left = tooltipX;
 });
 
 timeSlider.addEventListener('mouseenter', (event) => {
-  timeTooltip.style.display="flex";
+  timeTooltip.style.display = "flex";
 });
 
 timeSlider.addEventListener('mouseleave', (event) => {
-  timeTooltip.style.display="none";
+  timeTooltip.style.display = "none";
 });
