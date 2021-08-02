@@ -8,7 +8,7 @@
 }
   
 [data-theme='dark'] {
-    --background: #3333338ff;
+    --background: #3333338f;
     --background-solid: #333333;
     --accent: #cccccc;
     --accent-transparent: #cccccc2f;
@@ -303,7 +303,7 @@ input {
         background-color: var(--background);
         backdrop-filter: var(--blur);
         -webkit-backdrop-filter: var(--blur);
-        align-items: flex-end;
+        align-items: stretch;
         margin: 0px;
 
         position: absolute;
@@ -322,8 +322,9 @@ input {
     }
     
     .picker > *:not(#picker-highlight) {
-        padding: 0px 10px;
+        padding: 0px;
         margin: 0px;
+        padding-left: 30%;
         width: 70%;
         cursor: pointer;
         z-index: 3;
