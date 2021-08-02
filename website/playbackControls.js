@@ -25,7 +25,6 @@ const expandableControl = document.querySelectorAll(".expandable-control");
 
 var windowIsSkinny = window.matchMedia("(max-width: " + em(42) + "px)").matches;
 
-
 window.addEventListener("mousemove", (event) => {
     if (!windowIsSkinny) {
         if (event.clientY > vh(65)) {

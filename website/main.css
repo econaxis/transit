@@ -348,7 +348,7 @@ input {
         transition: opacity 0.5s 0.5s;
     }
 
-    .selected {
-        background-color: var(--accent-transparent) !important;
+    .selected { 
+        background-color: var(--accent-transparent) !important; /* to keep or not to keep? */
     }
   }

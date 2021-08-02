@@ -31,52 +31,52 @@
   </div>
 
   <div id="bottom-controls">
-      <div id="bump-container">
-        <div class="tooltip" id="slider-pos" for="time-slider"></div>
-        <div id="bump">
-          <svg viewBox="0 0 120 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M60 0C35.4 1.34526e-10 36 24 0 24H120C84 24 84.6 -1.34526e-10 60 0Z" />
+    <div id="bump-container">
+      <div class="tooltip" id="slider-pos" for="time-slider"></div>
+      <div id="bump">
+        <svg viewBox="0 0 120 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M60 0C35.4 1.34526e-10 36 24 0 24H120C84 24 84.6 -1.34526e-10 60 0Z" />
+        </svg>
+      </div>
+    </div>
+    <div id="progress">
+      <input id="time-slider" type="range" step=0.01 min=0 max=100 value=100>
+    </div>
+    <div id="button-controls">
+      <div>
+        <div class="button-control-icon-container paused" id="play-pause">
+          <svg class="button-control-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M23.0738 14.456C21.7423 13.6087 20 14.5652 20 16.1433V43.8567C20 45.4348 21.7423 46.3913 23.0738 45.544L44.8485 31.6873C46.0835 30.9014 46.0835 29.0986 44.8485 28.3127L23.0738 14.456Z" />
           </svg>
         </div>
       </div>
-      <div id="progress">
-        <input id="time-slider" type="range" step=0.01 min=0 max=100 value=100>
-      </div>
-      <div id="button-controls">
-        <div>
-          <div class="button-control-icon-container paused" id="play-pause">
-            <svg class="button-control-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M23.0738 14.456C21.7423 13.6087 20 14.5652 20 16.1433V43.8567C20 45.4348 21.7423 46.3913 23.0738 45.544L44.8485 31.6873C46.0835 30.9014 46.0835 29.0986 44.8485 28.3127L23.0738 14.456Z" />
-            </svg>
-          </div>
+
+      <div class="expandable-control">
+        <div class="button-control-icon-container">
+          <svg class="button-control-icon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M30.57 12.8551L28.725 15.6301C29.6148 17.4047 30.0504 19.3723 29.9928 21.3566C29.9352 23.341 29.3862 25.28 28.395 27.0001H7.60501C6.31677 24.7652 5.78296 22.1747 6.08272 19.6127C6.38249 17.0506 7.49988 14.6533 9.26923 12.7762C11.0386 10.8991 13.3657 9.64212 15.9056 9.1916C18.4455 8.74108 21.063 9.12101 23.37 10.2751L26.145 8.43006C23.3197 6.61838 19.9685 5.80657 16.6273 6.12446C13.2862 6.44236 10.1482 7.87161 7.71525 10.1836C5.28233 12.4956 3.69506 15.5567 3.20734 18.8773C2.71962 22.1979 3.35964 25.5861 5.02501 28.5001C5.28678 28.9535 5.66265 29.3305 6.11526 29.5936C6.56787 29.8568 7.08147 29.9969 7.60501 30.0001H28.38C28.9086 30.0022 29.4284 29.8645 29.8868 29.6011C30.3451 29.3377 30.7257 28.9579 30.99 28.5001C32.3721 26.1059 33.0657 23.3765 32.9942 20.613C32.9227 17.8495 32.089 15.1595 30.585 12.8401L30.57 12.8551Z" />
+            <path
+              d="M15.885 23.115C16.1636 23.3939 16.4945 23.6152 16.8587 23.7662C17.2229 23.9172 17.6132 23.9949 18.0075 23.9949C18.4017 23.9949 18.7921 23.9172 19.1563 23.7662C19.5205 23.6152 19.8514 23.3939 20.13 23.115L28.62 10.38L15.885 18.87C15.6061 19.1486 15.3848 19.4795 15.2338 19.8437C15.0828 20.2079 15.0051 20.5983 15.0051 20.9925C15.0051 21.3868 15.0828 21.7771 15.2338 22.1413C15.3848 22.5055 15.6061 22.8364 15.885 23.115Z" />
+          </svg>
         </div>
 
-        <div class="expandable-control">
-          <div class="button-control-icon-container">
-            <svg class="button-control-icon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M30.57 12.8551L28.725 15.6301C29.6148 17.4047 30.0504 19.3723 29.9928 21.3566C29.9352 23.341 29.3862 25.28 28.395 27.0001H7.60501C6.31677 24.7652 5.78296 22.1747 6.08272 19.6127C6.38249 17.0506 7.49988 14.6533 9.26923 12.7762C11.0386 10.8991 13.3657 9.64212 15.9056 9.1916C18.4455 8.74108 21.063 9.12101 23.37 10.2751L26.145 8.43006C23.3197 6.61838 19.9685 5.80657 16.6273 6.12446C13.2862 6.44236 10.1482 7.87161 7.71525 10.1836C5.28233 12.4956 3.69506 15.5567 3.20734 18.8773C2.71962 22.1979 3.35964 25.5861 5.02501 28.5001C5.28678 28.9535 5.66265 29.3305 6.11526 29.5936C6.56787 29.8568 7.08147 29.9969 7.60501 30.0001H28.38C28.9086 30.0022 29.4284 29.8645 29.8868 29.6011C30.3451 29.3377 30.7257 28.9579 30.99 28.5001C32.3721 26.1059 33.0657 23.3765 32.9942 20.613C32.9227 17.8495 32.089 15.1595 30.585 12.8401L30.57 12.8551Z" />
-              <path
-                d="M15.885 23.115C16.1636 23.3939 16.4945 23.6152 16.8587 23.7662C17.2229 23.9172 17.6132 23.9949 18.0075 23.9949C18.4017 23.9949 18.7921 23.9172 19.1563 23.7662C19.5205 23.6152 19.8514 23.3939 20.13 23.115L28.62 10.38L15.885 18.87C15.6061 19.1486 15.3848 19.4795 15.2338 19.8437C15.0828 20.2079 15.0051 20.5983 15.0051 20.9925C15.0051 21.3868 15.0828 21.7771 15.2338 22.1413C15.3848 22.5055 15.6061 22.8364 15.885 23.115Z" />
-            </svg>
-          </div>
-
-          <div class="picker hidden">
-            <div id="picker-highlight"></div>
-            <div>0.5x</div>
-            <div class="selected">1x</div>
-            <!-- assuming real time is 1 and people likely dont wanna go slower also (somehow give some signla that this is equiv to real time)-->
-            <div>2x</div>
-            <div>8x</div>
-            <div>1min/s</div>
-            <div>1h/s</div>
-            <div>1day/s</div>
-          </div>
-
-          <div class="control-value">1x</div>
+        <div class="picker hidden">
+          <div id="picker-highlight"></div>
+          <div>0.5x</div>
+          <div class="selected">1x</div>
+          <!-- assuming real time is 1 and people likely dont wanna go slower also (somehow give some signla that this is equiv to real time)-->
+          <div>2x</div>
+          <div>8x</div>
+          <div>1min/s</div>
+          <div>1h/s</div>
+          <div>1day/s</div>
         </div>
+
+        <div class="control-value">1x</div>
       </div>
+    </div>
   </div>
 
 
