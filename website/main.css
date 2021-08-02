@@ -8,7 +8,7 @@
 }
   
 [data-theme='dark'] {
-    --background: #3333338f;
+    --background: #3333338ff;
     --background-solid: #333333;
     --accent: #cccccc;
     --accent-transparent: #cccccc2f;
@@ -100,7 +100,7 @@ input {
 #bump {
     height: 2.355vmax;
     position: relative;
-    left: 30px;
+    left: 0%;
 }
 
 #bump > svg {
@@ -168,7 +168,7 @@ input {
 }
 
 #button-controls {
-    display: flex;
+    display: none;
     flex-direction: row;
     justify-content: start;
     align-items: center;
@@ -191,11 +191,11 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 5px;
-    width: 40px;
-    height: 40px;
+    margin: 0 0.4em;
+    width: 3em;
+    height: 3em;
     background-color: transparent;
-    border-radius: 5px;
+    border-radius: 0.4em;
 }
 
 .button-control-icon-container:hover {
@@ -203,14 +203,14 @@ input {
 }
 
 .button-control-icon {
-    width: 20px;
-    height: 20px;
+    width: 1.5em;
+    height: 1.5em;
     fill: var(--accent);
 }
 
 #play-pause > svg{
-    width: 40px;
-    height: 40px;
+    width: 3em;
+    height: 3em;
     fill: var(--accent);
 }
 
@@ -227,18 +227,19 @@ input {
 .picker {
     display: flex;
     flex-direction: row;
-    border-radius: 30px;
+    border-radius: calc(0.6em + 4px);
     background-color: var(--accent-transparent);
     margin: 0 5px;
     position: relative;
     left: 0;
+    line-height: 1.2;
 }
 
 .picker > * {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    border-radius: 30px;
+    border-radius: calc(0.6em + 4px);
 }
 
 .picker > *:not(#picker-highlight) {
@@ -258,10 +259,12 @@ input {
     z-index: 0;
 }
 
-.picker.hidden {
+.picker.hidden{
     max-width: 0 !important;
     overflow: hidden;
     transition: max-width 0.2s linear 0.2s;
+    margin: 0;
+    transition: margin 0.1s linear;
 }
 
 .picker.hidden > *:not(#picker-highlight) {
@@ -274,4 +277,87 @@ input {
     transition: opacity 0.5s 0.5s;
 }
 
+.control-value {
+    opacity: 0;
+    transition: opacity 0.2s 0.5s;
+}
+
+.hidden + .control-value {
+    opacity: 1;
+}
+
 /* TODO fix init positions to prevent flicker*/
+/* cool thing: use @container but it's too experimental at the time of writing oopsie */
+@media only screen and (max-width: calc(42 * 13px)) {
+    .expandable-control > *:not(:first-child){
+        display: flex;
+    }
+    
+    .expandable-control > *:not(:first-child) > *{
+        opacity: 1;
+        transition: opacity 0.5s 0.2s;
+    }
+    
+    .picker {
+        flex-direction: column;
+        background-color: var(--background);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
+        align-items: flex-end;
+        margin: 0px;
+
+        position: absolute;
+        width: 70%;
+        left: 15%;
+        bottom: calc(100% + 4em);
+        border-radius: calc(0.6em + 8px);
+    }
+    
+    .picker > * {
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        align-items: center;
+        border-radius: calc(0.6em + 8px);
+    }
+    
+    .picker > *:not(#picker-highlight) {
+        padding: 0px 10px;
+        margin: 0px;
+        width: 70%;
+        cursor: pointer;
+        z-index: 3;
+        height: 38px;
+        font-size: 1.15em;
+        background-color: unset;
+    }
+    
+    #picker-highlight {
+        left: calc(10% - 10px);
+        top: 38px;
+        bottom: 190px;
+        width: 14px;
+        height: unset;
+        background-color: var(--accent);
+        z-index: 0;
+    }
+    
+    .picker.hidden {
+        display: none; 
+        transition: visibility 0.5s;
+    }
+    
+    .picker.hidden > *:not(#picker-highlight) {
+        opacity: 0 !important;    
+        transition: opacity 0.5s;
+    }
+    
+    .picker.hidden > #picker-highlight {
+        opacity: 0 !important;    
+        transition: opacity 0.5s 0.5s;
+    }
+
+    .selected {
+        background-color: var(--accent-transparent);
+    }
+  }
