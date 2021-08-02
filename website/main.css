@@ -8,7 +8,7 @@
 }
   
 [data-theme='dark'] {
-    --background: #3333338f;
+    --background: #333333af;
     --background-solid: #333333;
     --accent: #cccccc;
     --accent-transparent: #cccccc2f;
@@ -262,9 +262,8 @@ input {
 .picker.hidden{
     max-width: 0 !important;
     overflow: hidden;
-    transition: max-width 0.2s linear 0.2s;
     margin: 0;
-    transition: margin 0.1s linear;
+    transition: max-width 0.2s linear 0.2s, margin 0.1s linear;
 }
 
 .picker.hidden > *:not(#picker-highlight) {
@@ -289,10 +288,6 @@ input {
 /* TODO fix init positions to prevent flicker*/
 /* cool thing: use @container but it's too experimental at the time of writing oopsie */
 @media only screen and (max-width: calc(42 * 13px)) {
-    .expandable-control > *:not(:first-child){
-        display: flex;
-    }
-    
     .expandable-control > *:not(:first-child) > *{
         opacity: 1;
         transition: opacity 0.5s 0.2s;
@@ -334,18 +329,13 @@ input {
     }
     
     #picker-highlight {
-        left: calc(10% - 10px);
-        top: 38px;
-        bottom: 190px;
-        width: 14px;
+        left: calc(12% - 9px);
+        top: 48px;
+        bottom: 200px;
+        width: 18px;
         height: unset;
         background-color: var(--accent);
         z-index: 0;
-    }
-    
-    .picker.hidden {
-        display: none; 
-        transition: visibility 0.5s;
     }
     
     .picker.hidden > *:not(#picker-highlight) {
@@ -359,6 +349,6 @@ input {
     }
 
     .selected {
-        background-color: var(--accent-transparent);
+        background-color: var(--accent-transparent) !important;
     }
   }

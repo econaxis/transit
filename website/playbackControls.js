@@ -36,6 +36,8 @@ window.addEventListener("mousemove", (event) => {
             buttonCtrls.style.display = "none";
         }
     }
+    console.log("moved!")
+    console.log(windowIsSkinny)
 });
 
 window.addEventListener("resize", () => {
@@ -96,7 +98,7 @@ expandableControl.forEach((c) => {
     });
     c.addEventListener("touchend", (event) => {
         let expandingElements = c.children;
-        if(windowIsSkinny && !event.path.includes(picker)) {
+        if (windowIsSkinny && !event.path.includes(picker)) {
             for (let i = 1; i < expandingElements.length; i++) {
                 expandingElements[i].classList.toggle("hidden");
             }
@@ -191,18 +193,34 @@ picker.addEventListener("click", (event) => {
             break;
         }
     }
-    let x1 = 60 * i;
-    let x2 = 60 * (pickerSize - i - 1);
-    let strX = pickerHighlight.style.left || "60px";
-    strX = parseFloat(strX);
-    if (strX <= x1) {
-        pickerHighlight.style.transition = "right 0.5s, left 0.5s ease-out 0.35s";
-        pickerHighlight.style.right = x2 + "px";
-        pickerHighlight.style.left = x1 + "px";
+    let itemSize = windowIsSkinny ? 38 : 60;
+    let buffer = windowIsSkinny ? 10 : 0; //vertical margin thing with the sliding knob
+    let x1 = itemSize * i + buffer;
+    let x2 = itemSize * (pickerSize - i - 1) + buffer;
+    if (windowIsSkinny) {
+        let strY = pickerHighlight.style.top || "38px";
+        strY = parseFloat(strY);
+        if (strY <= x1) {
+            pickerHighlight.style.transition = "bottom 0.5s, top 0.5s ease-out 0.35s";
+            pickerHighlight.style.bottom = x2 + "px";
+            pickerHighlight.style.top = x1 + "px";
+        } else {
+            pickerHighlight.style.transition = "top 0.5s, bottom 0.5s ease-out 0.35s";
+            pickerHighlight.style.top = x1 + "px";
+            pickerHighlight.style.bottom = x2 + "px";
+        }
     } else {
-        pickerHighlight.style.transition = "left 0.5s, right 0.5s ease-out 0.35s";
-        pickerHighlight.style.left = x1 + "px";
-        pickerHighlight.style.right = x2 + "px";
+        let strX = pickerHighlight.style.left || "60px";
+        strX = parseFloat(strX);
+        if (strX <= x1) {
+            pickerHighlight.style.transition = "right 0.5s, left 0.5s ease-out 0.35s";
+            pickerHighlight.style.right = x2 + "px";
+            pickerHighlight.style.left = x1 + "px";
+        } else {
+            pickerHighlight.style.transition = "left 0.5s, right 0.5s ease-out 0.35s";
+            pickerHighlight.style.left = x1 + "px";
+            pickerHighlight.style.right = x2 + "px";
+        }
     }
     //console.log(pickerHighlight.style.transition);
     pickerItems.forEach((i) => {
@@ -210,7 +228,7 @@ picker.addEventListener("click", (event) => {
     });
     event.target.classList.add("selected");
     event.target.parentElement.nextElementSibling.innerHTML = event.target.innerHTML; //ideally check if nextsib is ctrl value
-    setTimeout(function () { event.target.parentElement.classList.add("hidden"); }, 1500);
+    setTimeout(function () { event.target.parentElement.classList.add("hidden"); }, (windowIsSkinny ? 1000 : 1500));
 });
 
 bottomBar.addEventListener("mouseleave", (event) => {
