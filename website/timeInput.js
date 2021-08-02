@@ -25,6 +25,11 @@ function em(v) {
   return v*em;
 }
 
+const fontS = parseFloat(getComputedStyle(document.querySelector("#bottom-controls")).fontSize);
+if(fontS>15) {
+    document.querySelector("#bump").style.height = (0.1 * Math.floor((fontS - 15)/2) + 2.355) + "vmax";
+}
+
 const timeSlider = document.querySelector('#time-slider');
 var timeSliderWidth = timeSlider.clientWidth - Math.min(vmax(3), em(2)); //real slider range is slider width minus thumb width
 var timeSliderMargin = Math.min(vmax(6), em(4));
