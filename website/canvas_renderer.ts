@@ -136,5 +136,12 @@ export function render_objects(
     map: L.Map,
     objects: Array<DrawableObject>
 ) {
+    ctx.resetTransform();
+    ctx.clearRect(
+        0,
+        0,
+        ctx.canvas.width,
+        ctx.canvas.height
+    );
     objects.forEach((obj) => obj.draw(ctx, map));
 }

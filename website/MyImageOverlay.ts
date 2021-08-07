@@ -99,7 +99,7 @@ export class MyImageOverlay {
         const pos2 = this.positions[old_index + 1].position;
 
         // Check that velocity makes sense
-        if (pos1.distanceTo(pos2)  > 100) {
+        if (pos1.distanceTo(pos2)  >  500) {
             if (timestamp - time1 < time2 - timestamp) return pos1;
             else return pos2;
         }
@@ -111,11 +111,6 @@ export class MyImageOverlay {
     }
 
     run_simulation_to(timestamp: number): SimulationIterResult {
-        // console.assert(
-        //     this.curindex <= 1 ||
-        //         this.positions[this.curindex - 1].timestamp <= timestamp
-        // );
-
         this.curindex = this.advance_curindex_to_timestamp(timestamp);
 
         if (this.curindex > this.positions.length)

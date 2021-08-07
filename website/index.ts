@@ -97,7 +97,7 @@ async function start() {
 
     const it = await PlaybackIterator.construct({
         min: Math.round(new Date().getTime() / 1000 - 3600 * 5.5),
-        max: Math.round(new Date().getTime() / 1000 - 3600 * 5.4),
+        max: Math.round(new Date().getTime() / 1000),
     });
 
     animate_with_default_canvas(it);
@@ -105,13 +105,7 @@ async function start() {
 
 
 export function draw_func(map: L.Map) {
-    canvas_ctx.resetTransform();
-    canvas_ctx.clearRect(
-        0,
-        0,
-        canvas_ctx.canvas.width,
-        canvas_ctx.canvas.height
-    );
+
     return (objects) => render_objects(canvas_ctx, map, objects);
 }
 

@@ -63,19 +63,29 @@ export class PlaybackIterator {
     }
 
     static async construct(time_range: { min: number; max: number }) {
-        const history_data = await fetch(
+        let response = fetch(
             rootapiurl(
                 `/positions-range?min-time=${time_range.min}&max-time=${time_range.max}`
             )
-        ).then((r) => r.json());
-
-        const headsigns = await fetch(rootapiurl("/headsigns")).then((r) =>
-            r.json()
         );
+
+        let history_data;
+
+        await response.then(json => json.json()).then(a => history_data = a).catch(reason => {
+            console.log("back up using json")
+            return fetch("/output.json").then(a=>a.json()).then(a => history_data = a);
+        });
+
+        console.log(history_data);
+
+        // const headsigns = await fetch(rootapiurl("/headsigns")).then((r) =>
+        //     r.json()
+        // );
 
         const actual_timerange = { min: [], max: [] };
         const buses = from_json_list(history_data).map(([key, value]) => {
-            const overlay = new MyImageOverlay(value, headsigns[key]);
+            // const overlay = new MyImageOverlay(value, headsigns[key]);
+            const overlay = new MyImageOverlay(value, "49 ubc");
 
             actual_timerange.max.push(value[value.length - 1].timestamp);
             actual_timerange.min.push(value[0].timestamp);

@@ -1,0 +1,13 @@
+[Unit]
+Description="Polls GTFS Translink API and pushes it into Database"
+
+[Service]
+User=henry
+WorkingDirectory=/home/henry/transit/TimerTrigger2
+ExecStart=/usr/bin/python3 __init__.py
+Restart=always
+Group=henry
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
