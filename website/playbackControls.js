@@ -25,19 +25,19 @@ const expandableControl = document.querySelectorAll(".expandable-control");
 
 var windowIsSkinny = window.matchMedia("(max-width: " + em(42) + "px)").matches;
 
-window.addEventListener("mousemove", (event) => {
-    if (!windowIsSkinny) {
-        if (event.clientY > vh(65)) {
-            buttonCtrls.style.maxHeight = "100%";
-            buttonCtrls.style.display = "flex";
-        } else {
-            buttonCtrls.style.maxHeight = 0;
-            buttonCtrls.style.display = "none";
-        }
-    }
-    console.log("moved!")
-    console.log(windowIsSkinny)
-});
+// window.addEventListener("mousemove", (event) => {
+//     if (!windowIsSkinny) {
+//         if (event.clientY > vh(65)) {
+//             buttonCtrls.style.maxHeight = "100%";
+//             buttonCtrls.style.display = "flex";
+//         } else {
+//             buttonCtrls.style.maxHeight = 0;
+//             buttonCtrls.style.display = "none";
+//         }
+//     }
+//     console.log("moved!")
+//     console.log(windowIsSkinny)
+// });
 
 window.addEventListener("resize", () => {
     windowIsSkinny = window.matchMedia("(max-width: 42em)").matches;

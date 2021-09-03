@@ -1,9 +1,9 @@
 import { rootapiurl } from "./index";
 import {
     HistoricalPosition,
-    MyImageOverlay,
+    SingleBusSimulator,
     SimulationIterResult,
-} from "./MyImageOverlay";
+} from "./SingleBusSimulator";
 import * as L from "leaflet";
 import { DrawableBus } from "./canvas_renderer";
 
@@ -37,14 +37,14 @@ function median(array) {
 
 export class PlaybackIterator {
     private readonly min: number;
-    private buses: Array<MyImageOverlay>;
+    private buses: Array<SingleBusSimulator>;
     public readonly max: number;
     public cur_time: number;
     public stop: boolean;
 
     private constructor(
         time_range: { min: number; max: number },
-        buses: Array<MyImageOverlay>
+        buses: Array<SingleBusSimulator>
     ) {
         this.min = time_range.min;
         this.max = time_range.max;
@@ -76,8 +76,6 @@ export class PlaybackIterator {
             return fetch("/output.json").then(a=>a.json()).then(a => history_data = a);
         });
 
-        console.log(history_data);
-
         // const headsigns = await fetch(rootapiurl("/headsigns")).then((r) =>
         //     r.json()
         // );
@@ -85,7 +83,7 @@ export class PlaybackIterator {
         const actual_timerange = { min: [], max: [] };
         const buses = from_json_list(history_data).map(([key, value]) => {
             // const overlay = new MyImageOverlay(value, headsigns[key]);
-            const overlay = new MyImageOverlay(value, "49 ubc");
+            const overlay = new SingleBusSimulator(value, "49 ubc");
 
             actual_timerange.max.push(value[value.length - 1].timestamp);
             actual_timerange.min.push(value[0].timestamp);
@@ -121,25 +119,25 @@ export class PlaybackIterator {
         return (this.max - this.cur_time) / (this.max - this.min);
     }
 
-    get_buses(): Readonly<Array<MyImageOverlay>> {
+    get_buses(): Readonly<Array<SingleBusSimulator>> {
         return this.buses;
     }
 
-    next(check_in_viewport: (pos: L.LatLng) => boolean): Array<DrawableBus> {
+    next(check_in_viewport: (pos: L.LatLng) => boolean): Array<[DrawableBus, String]> {
         if (this.cur_time > this.max) {
             throw Error("Playback iterator is not valid anymore");
         }
 
         this.cur_time += (window as any).UPDATE_INTERV;
-        const to_remove = new Set<MyImageOverlay>();
+        const to_remove = new Set<SingleBusSimulator>();
 
         // todo: update to_remove properly in terms of should_continue
-        const drawables = this.buses.map((bus, index): null | DrawableBus => {
+        const drawables: Array<[DrawableBus, String] | null> = this.buses.map((bus, index) => {
             if (check_in_viewport(bus.curpos)) {
                 const result = bus.run_simulation_to(this.cur_time);
 
                 if (result === SimulationIterResult.SHOW) {
-                    return new DrawableBus(bus.curpos, bus.angle, bus.image);
+                    return [new DrawableBus(bus.curpos, bus.angle, bus.image), bus.headsign];
                 } else if (result === SimulationIterResult.INVALID) {
                     to_remove.add(bus);
                 }
@@ -153,7 +151,7 @@ export class PlaybackIterator {
             }
         });
 
-        const drawables_nonnull = drawables.filter((bus) => bus != null);
+        const drawables_nonnull: Array<[DrawableBus, String]> = drawables.filter((bus) => bus != null);
 
         // Remove invalid entries
         this.buses = this.buses.filter((bus) => !to_remove.has(bus));

@@ -11,6 +11,7 @@ import {
 import check_in_view = OffsetCalculator.check_in_view;
 import { subscr as TimeSubscriber } from "./AnimationTimeDisplay";
 import { StreamingSubscriber } from "./StreamingSubscriber";
+import { CanvasInteractionHandler } from "./CanvasInteractionHandler";
 
 // C.test.test_handler();
 
@@ -103,20 +104,24 @@ async function start() {
     animate_with_default_canvas(it);
 }
 
-
 export function draw_func(map: L.Map) {
-
     return (objects) => render_objects(canvas_ctx, map, objects);
 }
 
 export function animate_with_default_canvas(it: PlaybackIterator) {
+    let interactive = new CanvasInteractionHandler(
+        canvas_ctx.canvas,
+        document.getElementById("mapid")
+    );
     animate(
         it,
         draw_func(map),
         (pos) => {
             return check_in_view(map, pos, canvas_bounds);
         },
-        [TimeSubscriber, StreamingSubscriber.handler]
+        [TimeSubscriber, StreamingSubscriber.handler],
+        interactive,
+        map
     );
 }
 

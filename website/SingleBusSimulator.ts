@@ -53,8 +53,8 @@ export enum SimulationIterResult {
     INVALID,
 }
 
-export class MyImageOverlay {
-    private headsign: string;
+export class SingleBusSimulator {
+    public headsign: string;
     private positions: Array<HistoricalPosition>;
     private curindex: number;
     public curpos: L.LatLng;
@@ -79,7 +79,6 @@ export class MyImageOverlay {
         ) {
             index++;
         }
-
         return index;
     }
 
@@ -99,7 +98,7 @@ export class MyImageOverlay {
         const pos2 = this.positions[old_index + 1].position;
 
         // Check that velocity makes sense
-        if (pos1.distanceTo(pos2)  >  500) {
+        if (pos1.distanceTo(pos2)  >  800) {
             if (timestamp - time1 < time2 - timestamp) return pos1;
             else return pos2;
         }
@@ -123,9 +122,9 @@ export class MyImageOverlay {
         )
             return SimulationIterResult.NOSHOW;
 
-        // If it's been 3 minutes until the last update, don't show.
-        if (this.positions[this.curindex].timestamp + 180 < timestamp)
-            return SimulationIterResult.NOSHOW;
+        // If it's been 3 minutes until the last update, don't update.
+        // if (this.positions[this.curindex].timestamp + 180 < timestamp)
+        //     return SimulationIterResult.SHOW;
 
         const new_position = this.run_interpolation(this.curindex, timestamp);
 

@@ -1,6 +1,6 @@
 import * as L from "leaflet";
 import { rootapiurl, Positions } from "./index";
-import {MyImageOverlay, update_image, get_angle} from "./MyImageOverlay";
+import {SingleBusSimulator, update_image, get_angle} from "./SingleBusSimulator";
 import {map} from "leaflet";
 
 let g_map_ref: L.Map = undefined;

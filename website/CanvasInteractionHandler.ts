@@ -20,7 +20,7 @@ function create_invis_canvas(
     return canvas;
 }
 
-class CanvasInteractionHandler {
+export class CanvasInteractionHandler {
     cur_number = 2;
     hovermap: CanvasInteractionHandler.HoverMap = default_hovermap();
     canvas: CanvasRenderingContext2D;
@@ -31,6 +31,11 @@ class CanvasInteractionHandler {
         parent_elem.appendChild(canvaselem);
 
         this.canvas = canvaselem.getContext("2d");
+        this.register_event_listeners();
+    }
+
+    clear() {
+        this.canvas.clearRect(0, 0, 10000, 10000);
     }
 
     register_interaction(
@@ -46,12 +51,12 @@ class CanvasInteractionHandler {
         this.hovermap.set(this.cur_number, handler);
 
         const b = this.cur_number & 0x0000ff;
-        const g = this.cur_number & 0x00ff00;
-        const r = this.cur_number & 0xff0000;
+        const g = (this.cur_number & 0x00ff00) >> 8;
+        const r = (this.cur_number & 0xff0000) >> 16;
 
         set_transform_from_matrix(this.canvas, transform);
         this.canvas.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        console.log(this.canvas.fillStyle);
+        // console.log(this.canvas.fillStyle);
         this.canvas.fillRect(0, 0, 1, 1);
 
 
@@ -78,7 +83,7 @@ class CanvasInteractionHandler {
     }
 }
 
-namespace CanvasInteractionHandler {
+export namespace CanvasInteractionHandler {
     export type HoverMap = Map<number, Handler>;
 
     export enum EventType {
@@ -93,7 +98,7 @@ namespace CanvasInteractionHandler {
     ) => void;
 }
 
-export namespace test {
+namespace test {
     export function test_handler() {
         console.log("test handler")
         const map = document.getElementById("mapid");
