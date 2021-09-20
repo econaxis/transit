@@ -24,7 +24,6 @@ export function animate(
 
     if (Date.now() - last_run_time >= FRAMEINTERVAL) {
         interact.clear();
-
         const drawable = it.next(check_in_viewport);
         const buses = [],
             headsigns = [];
@@ -35,7 +34,7 @@ export function animate(
                 EventType.HoverIn,
                 elem[0].calculate_transform(map),
                 () => {
-                    console.log("touched bus!", elem[0].position);
+                    console.log("touched bus!", elem[0].headsign);
                 }
             );
         });

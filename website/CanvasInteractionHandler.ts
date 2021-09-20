@@ -34,10 +34,21 @@ export class CanvasInteractionHandler {
         this.register_event_listeners();
     }
 
+    /**
+     * Reset the interaction handler for the next frame cycle.
+     */
     clear() {
+        this.cur_number = 2;
+        this.canvas.resetTransform();
         this.canvas.clearRect(0, 0, 10000, 10000);
     }
 
+    /**
+     * Registers a handler callback at a particular position, for a particular event type
+     * @param type event type (hover or click)
+     * @param transform 2 x 3 transformation matrix representing the position
+     * @param handler callback function when the event type is detected
+     */
     register_interaction(
         type: CanvasInteractionHandler.EventType,
         transform: Array<number>,
@@ -56,9 +67,7 @@ export class CanvasInteractionHandler {
 
         set_transform_from_matrix(this.canvas, transform);
         this.canvas.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        // console.log(this.canvas.fillStyle);
         this.canvas.fillRect(0, 0, 1, 1);
-
 
         (window as any).canvas = this.canvas;
     }

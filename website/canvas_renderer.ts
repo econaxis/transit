@@ -22,13 +22,15 @@ export function set_transform_from_matrix(
 
 export class DrawableBus implements DrawableObject {
     public readonly position: L.LatLng;
+    public readonly headsign: string;
     private readonly angle: number;
     private readonly image: HTMLImageElement;
 
-    constructor(position: L.LatLng, angle: number, image: HTMLImageElement) {
+    constructor(position: L.LatLng, angle: number, image: HTMLImageElement, headsign: string) {
         this.position = position;
         this.angle = angle;
         this.image = image;
+        this.headsign = headsign;
     }
 
     calculate_transform(map: L.Map): Array<number> {
@@ -50,6 +52,9 @@ export class DrawableBus implements DrawableObject {
             y: -this.image.height / 2,
         };
 
+        // This rotation matrix doesn't work for some reason...
+        // The bug: rotates around the top-left (0, 0) corner instead of the center
+        // The fix: translate center to origin -> rotate -> undo previous translation somehow
         // prettier-ignore
         const matrix = [
             cos, -sin, -translate_rotation.x * cos + translate_rotation.y * sin + translate_rotation.x + translation.x,

@@ -83,6 +83,7 @@ export class PlaybackIterator {
         const actual_timerange = { min: [], max: [] };
         const buses = from_json_list(history_data).map(([key, value]) => {
             // const overlay = new MyImageOverlay(value, headsigns[key]);
+            // Fake headsigns for debugging
             const overlay = new SingleBusSimulator(value, "49 ubc");
 
             actual_timerange.max.push(value[value.length - 1].timestamp);
@@ -137,7 +138,7 @@ export class PlaybackIterator {
                 const result = bus.run_simulation_to(this.cur_time);
 
                 if (result === SimulationIterResult.SHOW) {
-                    return [new DrawableBus(bus.curpos, bus.angle, bus.image), bus.headsign];
+                    return [new DrawableBus(bus.curpos, bus.angle, bus.image, bus.headsign), "empty"];
                 } else if (result === SimulationIterResult.INVALID) {
                     to_remove.add(bus);
                 }
