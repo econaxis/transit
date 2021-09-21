@@ -1,4 +1,5 @@
 import * as L from "leaflet";
+import {SingleBusSimulator} from "./SingleBusSimulator";
 
 export interface DrawableObject {
     draw: (canvas: CanvasRenderingContext2D, map: L.Map) => void;
@@ -23,11 +24,13 @@ export function set_transform_from_matrix(
 export class DrawableBus implements DrawableObject {
     public readonly position: L.LatLng;
     public readonly headsign: string;
+    public readonly original_bus: SingleBusSimulator;
     private readonly angle: number;
     private readonly image: HTMLImageElement;
 
-    constructor(position: L.LatLng, angle: number, image: HTMLImageElement, headsign: string) {
+    constructor(position: L.LatLng, angle: number, image: HTMLImageElement, headsign: string, original_bus: SingleBusSimulator) {
         this.position = position;
+        this.original_bus = original_bus;
         this.angle = angle;
         this.image = image;
         this.headsign = headsign;

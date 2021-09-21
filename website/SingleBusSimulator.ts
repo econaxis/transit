@@ -58,16 +58,18 @@ export class SingleBusSimulator {
     private positions: Array<HistoricalPosition>;
     private curindex: number;
     public curpos: L.LatLng;
+    public readonly id: number;
     public angle: number;
     public image: HTMLImageElement;
 
-    constructor(positions: Array<HistoricalPosition>, headsign: string) {
+    constructor(positions: Array<HistoricalPosition>, headsign: string, id: number) {
         this.positions = positions;
         this.curindex = 0;
         this.headsign = headsign;
 
         this.curpos = this.positions[0].position;
         this.angle = 0;
+        this.id = id;
         this.image = ImageGenerator.get();
     }
 

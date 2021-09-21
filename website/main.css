@@ -352,3 +352,19 @@ input {
         background-color: var(--accent-transparent) !important; /* to keep or not to keep? */
     }
   }
+
+.popup-prototype {
+    border: 1px solid #131211;
+    padding: 5px 10px 5px 10px;border-radius: 14px; background: #fdfdfd;
+    display: flex;
+    float: left;
+}
+.popup-prototype > span {
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 42px;
+    margin-left: 4px;
+    margin-right: 4px;
+}

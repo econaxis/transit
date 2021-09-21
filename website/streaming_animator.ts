@@ -4,6 +4,7 @@ import { AnimSubscriber } from "./index";
 import { DrawableBus } from "./canvas_renderer";
 import { CanvasInteractionHandler } from "./CanvasInteractionHandler";
 import EventType = CanvasInteractionHandler.EventType;
+import {get_popup} from "./BusInfoPopup";
 
 const FRAMEINTERVAL = 1000 / 80;
 
@@ -24,6 +25,7 @@ export function animate(
 
     if (Date.now() - last_run_time >= FRAMEINTERVAL) {
         interact.clear();
+
         const drawable = it.next(check_in_viewport);
         const buses = [],
             headsigns = [];
@@ -33,7 +35,9 @@ export function animate(
             interact.register_interaction(
                 EventType.HoverIn,
                 elem[0].calculate_transform(map),
-                () => {
+                (type, mouse) => {
+                    let {x, y} = mouse;
+                    document.querySelector('body').appendChild(get_popup([x, y], elem[0].original_bus));
                     console.log("touched bus!", elem[0].headsign);
                 }
             );
