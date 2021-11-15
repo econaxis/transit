@@ -8,10 +8,10 @@ import BusInfoCol = transit.BusInfoCol;
 
 console.log(transit);
 export var map = L.map("mapid", {
-    zoomSnap: 0.5,
+    zoomSnap: 0.1,
     // wheelPxPerZoomLevel: 170
-    keyboardPanDelta: 10,
-    zoomDelta: 0.5
+    keyboardPanDelta: 5,
+    zoomDelta: 0.1,
 }).setView([43.723351, -79.339274], 12);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution:
@@ -22,17 +22,24 @@ export var app = new PIXI.Application({
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundAlpha: 0,
-    antialias: true
+    antialias: true,
 });
+app.ticker.stop();
+PIXI.Ticker.shared.stop();
+PIXI.Ticker.system.stop();
 app.stage.addChild(g_ours, g_theirs);
+
+function convcol(str: string) {
+    return PIXI.utils.string2hex(str);
+}
 
 // app.renderer.plugins.interaction.autoPreventDefault = false;
 let obj = new PIXI.Graphics();
-obj.beginFill(0x999999)
+obj.beginFill(convcol("#576ac7"))
     .drawRoundedRect(0, 0, 27, 18, 5)
     .endFill()
-    .beginFill(0x0a4e57)
-    .drawEllipse(20, 7.5, 3, 8)
+    .beginFill(convcol("#282e49"))
+    .drawRoundedRect(27 - 8, 1, 4, 16, 3)
     .endFill();
 var texture = app.renderer.generateTexture(obj);
 
@@ -141,40 +148,61 @@ function fix() {
     }
 }
 
-function rescale(scale) {
+let target_scale = 1;
+let start_scale = 1;
+let anim_progress = 0;
+
+// Copied with modifications from easings.net/#easeInOutCubic
+function ease_cubic(progress: number, start: number, end: number): number {
+    const scale =
+        progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    return (1 - scale) * start + scale * end;
+}
+
+function rescale(scale?, immediate = false) {
+    if (scale !== undefined) {
+        anim_progress = 0;
+        start_scale = sprites[0].rect.inner.scale.x;
+        target_scale = scale;
+    }
+    if (anim_progress >= 1) {
+        return;
+    }
+    anim_progress += 0.12;
+    if (immediate) anim_progress = 1;
+    const to_set = ease_cubic(anim_progress, start_scale, target_scale);
     for (const s of sprites) {
-        s.rect.inner.scale.set(scale, scale);
+        s.rect.inner.scale.set(to_set, to_set);
     }
 }
 
 var center = map.getCenter();
 var zoom = map.getZoom();
 map.on("zoomend", () => {
+    console.log("Setting scale", scale);
     app.view.classList.remove("leaflet-zoom-animated");
+    for (const s of sprites) {
+        s.rect.inner.scale.set(scale, scale);
+    }
+    app.render();
     app.view.style.transform = "";
+    rescale(1);
 });
 map.on("move", (evt) => {
-    // zoom = map.getZoom();
-    // center = map.getCenter();
-    // console.log("prev transform: ", app.view.style.transform);
-
-    // if (map.getZoom() < 9) {
-    //     rescale(Math.max(4 ** (map.getZoom() - 9), 0.25));
-    // } else {
-    //     rescale(1);
-    // }
-    // shifted right way more
     fix();
     app.render();
 });
 var in_animation = false;
+var scale = 1;
 map.on("zoomanim", (e) => {
     in_animation = true;
     zoom = map.getZoom();
     center = map.getCenter();
     const zoom1 = e.zoom;
     const center1 = e.center;
-    const scale = map.getZoomScale(zoom1, zoom);
+    scale = map.getZoomScale(zoom1, zoom);
     // This part derived, with modifications, from https://github.com/manubb/Leaflet.PixiOverlay/blob/master/L.PixiOverlay.js#L206
     const currentCenterPoint = map
         .project(center, zoom1)
@@ -190,7 +218,6 @@ map.on("zoomanim", (e) => {
         .subtract(translate_offset);
 
     app.view.classList.add("leaflet-zoom-animated");
-    console.log("zoomanim", viewhalf, scale);
     app.view.style.transform = `translate3d(${viewhalf.x}px, ${viewhalf.y}px, 0px) scale(${scale}) `;
     in_animation = false;
     // L.DomUtil.setTransform(app.view, viewhalf, scale);
@@ -234,12 +261,14 @@ function animate() {
     for (const s of sprites) {
         if (in_view(s.rect.container_pos) || update_all) s.travel(distance);
     }
+    if (!app.view.classList.contains("leaflet-zoom-animated")) rescale();
     if (
         follow != undefined &&
         !app.view.classList.contains("leaflet-zoom-animated")
     ) {
         map.setView(follow.position);
     }
+    app.render();
     if (update_all) prev_date = date;
     window.requestAnimationFrame(animate);
 }
