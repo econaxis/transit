@@ -8,3 +8,8 @@ node_modules
 .prettierrc
 website/out
 website/dist
+web1/out
+web1/a.data
+gtfs-ttc.db
+__pycache__/
+ttc/

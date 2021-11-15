@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "outDir": "./website/out/",
+    "outDir": "./web1/out/",
     "allowJs": true,
-    "target": "es2017",
+    "target": "ES6",
     "moduleResolution": "Node",
-    "module": "esnext"
+    "module": "esnext",
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true
   },
   "include": [
-    "./website/*"
+    "./web1/*"
   ]
 }

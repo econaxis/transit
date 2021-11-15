@@ -1,0 +1,26 @@
+syntax = "proto3";
+package transit;
+
+message StopPosition {
+  fixed32 stop_id = 1;
+  fixed32 stop_time = 2;
+  float shape_dist_traveled = 3;
+}
+
+message BusInfo {
+  int32 trip_id = 1;
+  repeated ShapePosition shapes = 2;
+  repeated StopPosition stops = 3;
+}
+message BusInfoCol {
+  repeated BusInfo bi = 1;
+}
+message Test {
+  ShapePosition shape = 1;
+}
+
+message ShapePosition {
+  float shape_dist_traveled = 1;
+  float lat = 2;
+  float lon = 3;
+}

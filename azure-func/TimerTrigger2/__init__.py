@@ -1,5 +1,4 @@
 import logging
-import azure.functions as func
 import sys
 from datetime import datetime
 import psycopg2.extras
@@ -8,12 +7,12 @@ import my_pb2
 import time
 import psycopg2
 
-sqlconn = psycopg2.connect(host = "henry-80q7.local", user = "transit", dbname = "transit", password = "transit")
-cur = sqlconn.cursor()
+#sqlconn = psycopg2.connect(host = "henry-80q7.local", user = "transit", dbname = "transit", password = "transit")
+#cur = sqlconn.cursor()
 
 prev_cache = {}
 
-def main(mytimer: func.TimerRequest) -> None:
+def main(mytimer) -> None:
     if len(prev_cache) == 0:
         print("Starting from fresh")
 
@@ -39,13 +38,11 @@ def main(mytimer: func.TimerRequest) -> None:
                  vehicle.position.latitude, vehicle.position.longitude,
                  vehicle.current_stop_sequence, vehicle.timestamp, vehicle.stop_id, vehicle.vehicle.id, now))
 
+        print(to_insert[0])
+#    if to_insert:
+#        psycopg2.extras.execute_values(cur,"INSERT INTO realtime VALUES %s ON CONFLICT DO NOTHING", to_insert)
+#    print("Inserted %s", len(to_insert))
+#    sqlconn.commit()
 
-    if to_insert:
-        psycopg2.extras.execute_values(cur,"INSERT INTO realtime VALUES %s ON CONFLICT DO NOTHING", to_insert)
-    print("Inserted %s", len(to_insert))
-    sqlconn.commit()
 
-
-while True:
-    time.sleep(10)
-    main(None)
+main(None)
