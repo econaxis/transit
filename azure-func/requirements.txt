@@ -1,4 +1,0 @@
-requests
-azure-functions
-psycopg2-binary
-protobuf
