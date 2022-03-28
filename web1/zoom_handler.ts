@@ -1,4 +1,4 @@
-import {app, fix, map, set_follow, sprites} from "./index";
+import {app, fix, force_update_all, set_simple, map, set_follow, sprites} from "./index";
 
 export namespace ZoomHandler {
     export var target_scale = 1;
@@ -40,17 +40,23 @@ export namespace ZoomHandler {
         map.on("zoomend", () => {
             app.view.classList.remove("leaflet-zoom-animated");
             for (const s of sprites) {
-                s.rect.inner.scale.set(zoom_anim_scale, zoom_anim_scale);
+                s.rect.inner.scale.set(zoom_anim_scale * ZoomHandler.target_scale, zoom_anim_scale * ZoomHandler.target_scale);
             }
             app.render();
             app.view.style.transform = "";
-            ZoomHandler.rescale(1);
+            ZoomHandler.rescale(ZoomHandler.optimal_scale(map.getZoom()));
+            force_update_all();
         });
-        map.on("move", (evt) => {
-            set_follow(undefined);
+        map.on("move", () => {
             fix();
             app.render();
         });
+        map.on("dragstart", () => {
+            set_follow(undefined);
+        });
+        map.on("dragend", () => {
+            force_update_all()
+        })
     }
 
     // Copied with modifications from easings.net/#easeInOutCubic
@@ -62,6 +68,24 @@ export namespace ZoomHandler {
         return (1 - scale) * start + scale * end;
     }
 
+    export function optimal_scale(map_zoom: number) : number {
+        if(map_zoom <= 12) {
+            console.log("Turning on simple");
+            set_simple(true);
+        }
+        else set_simple(false);
+        if (map_zoom <= 10) {
+            return 0.2;
+        } else if (map_zoom <= 11) {
+            return 0.5;
+        } else if (map_zoom <= 12.5) {
+            return 0.7;
+        } else if (map_zoom <= 15) {
+            return 1;
+        } else {
+            return 1.3;
+        }
+    }
     export function rescale(scale?, immediate = false) {
         if (scale !== undefined) {
             anim_progress = 0;
@@ -71,7 +95,7 @@ export namespace ZoomHandler {
         if (anim_progress >= 1) {
             return;
         }
-        anim_progress += 0.12;
+        anim_progress += 0.14;
         if (immediate) anim_progress = 1;
         const to_set = ease_cubic(anim_progress, start_scale, target_scale);
         for (const s of sprites) {

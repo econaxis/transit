@@ -1,3 +1,5 @@
+import struct
+
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
@@ -33,32 +35,29 @@ def detect_ids(df, table_name: str) -> [str]:
     return commands
 
 
-from datetime import datetime
-
-
 def load():
-    tables = ["stops", "trips", "shapes"]
-
+    tables = ["stops", "trips", "shapes", "routes"]
+    tables = ["routes"]
     st = pd.read_csv("ttc/stop_times.txt")
 
-    for i, row in st.iterrows():
-        if i % 10000 == 0:
-            print(i)
-        time_secs = 0
-        if row.arrival_time[0:2].isnumeric():
-            num = int(row.arrival_time[0:2])
-            if num >= 24:
-                row.arrival_time = f"{num - 24}{row.arrival_time[2:]}"
-                time_secs += 3600 * 24
-        time = datetime.strptime(row.arrival_time, "%H:%M:%S")
-        time_secs += time.hour * 3600 + time.minute * 60 + time.second
-        st.at[i, 'arrival_time'] = time_secs
-    st.arrival_time = st.arrival_time.astype('int64')
-    st.drop('departure_time', axis=1, inplace=True)
-
-    st.to_sql("stop_times", engine, if_exists='append')
-    for command in detect_ids(st, "stop_times"):
-        engine.execute(command)
+    #     for i, row in st.iterrows():
+    #         if i % 10000 == 0:
+    #             print(i)
+    #         time_secs = 0
+    #         if row.arrival_time[0:2].isnumeric():
+    #             num = int(row.arrival_time[0:2])
+    #             if num >= 24:
+    #                 row.arrival_time = f"{num - 24}{row.arrival_time[2:]}"
+    #                 time_secs += 3600 * 24
+    #         time = datetime.strptime(row.arrival_time, "%H:%M:%S")
+    #         time_secs += time.hour * 3600 + time.minute * 60 + time.second
+    #         st.at[i, 'arrival_time'] = time_secs
+    #     st.arrival_time = st.arrival_time.astype('int64')
+    #     st.drop('departure_time', axis=1, inplace=True)
+    #
+    #     st.to_sql("stop_times", engine, if_exists='append')
+    #     for command in detect_ids(st, "stop_times"):
+    #         engine.execute(command)
 
     for t in tables:
         table = pd.read_csv(f"ttc/{t}.txt")
@@ -77,7 +76,7 @@ def get_shapes_list(temp_name):
         SELECT sub.trip_id, shapes.shape_dist_traveled, shape_pt_lon, shape_pt_lat FROM shapes
             JOIN (SELECT DISTINCT trip_id, shape_id FROM {temp_name}) as sub
             ON shapes.shape_id = sub.shape_id
-            WHERE shapes.shape_dist_traveled IS NOT NULL ORDER BY sub.trip_id, shapes.shape_dist_traveled;
+            WHERE shapes.shape_dist_traveled ORDER BY sub.trip_id, shapes.shape_dist_traveled;
     """)
     result = conn.execute(query).fetchall()
 
@@ -86,6 +85,7 @@ def get_shapes_list(temp_name):
 
 def get_active_trips(cur_time=11 * 3600, end_time=12 * 3600):
     temp_name = "temp_table_active_trips"
+    conn.execute(f"DROP TABLE IF EXISTS {temp_name}")
     query = text(f"""
     CREATE TEMPORARY TABLE {temp_name} AS 
     SELECT trips.trip_id,stop_times.arrival_time,stop_times.stop_id,trips.shape_id,stop_times.shape_dist_traveled
@@ -99,7 +99,7 @@ def get_active_trips(cur_time=11 * 3600, end_time=12 * 3600):
     return result, temp_name
 
 
-def join_results(stop_times, shapes):
+def join_results(stop_times, shapes, writer):
     result = {}
     for i in stop_times:
         if i.trip_id not in result:
@@ -119,11 +119,51 @@ def join_results(stop_times, shapes):
 
     col = BusInfoCol()
     for j in result.values():
+        if len(col.bi) > 200:
+            s = col.SerializeToString()
+            length = struct.pack('<I', len(s))
+            writer.write(length)
+            writer.write(s)
+            col = BusInfoCol()
         col.bi.append(j)
-    return col.SerializeToString()
+    s = col.SerializeToString()
+    length = struct.pack('<I', len(s))
+    writer.write(length)
+    writer.write(s)
 
 
-result, temp_name = get_active_trips()
-result1 = get_shapes_list(temp_name)
-open("web1/a.data", "wb+").write(join_results(result, result1))
-conn.close()
+def get_trips():
+    li = conn.execute("SELECT trip_id, route_id FROM trips").fetchall()
+    result = {}
+    for trip, route in li:
+        result[trip] = route
+
+    return result
+
+
+def get_routes():
+    li = conn.execute("SELECT route_id, route_short_name, route_long_name FROM routes").fetchall()
+    result = {}
+    for route, short, name in li:
+        result[route] = str(short) + " " + name
+    return result
+
+
+def get_stops():
+    li = conn.execute("SELECT stop_id, stop_name FROM stops").fetchall()
+    result = {}
+    for stop_id, name in li:
+        result[stop_id] = name
+    return result
+
+
+# open("web1/trips.json", "w+").write(json.dumps(get_trips()))
+# open("web1/routes.json", "w+").write(json.dumps(get_routes()))
+# open("web1/stops.json", "w+").write(json.dumps(get_stops()))
+
+for start in range(0, 23 * 3600, 1800):
+    end = start + 1800
+    result, temp_name = get_active_trips(start, end)
+    result1 = get_shapes_list(temp_name)
+    file = open(f"web1/{start}.data", "wb+")
+    join_results(result, result1, file)

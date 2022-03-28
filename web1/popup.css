@@ -1,0 +1,117 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+#popup-container {
+    z-index: 100000;
+    padding: 5px 5px 10px;
+    gap: 3px 0;
+    height: fit-content;
+    border-radius: 14px;
+    background-color: white;
+    border: 0.5px solid rgb(211, 211, 211);
+    box-shadow: 2px 3px 11px -3px #c6c5c2;
+    max-width: 250px;
+}
+
+.container {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: fit-content(100px) fit-content(200px);
+    grid-template-areas:
+    "time1 name1"
+    "time2 name2"
+    "time3 name3";
+    justify-items: left;
+    min-width: 170px;
+
+}
+
+.tripname,
+.nextstops {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.tripname {
+    font-size: 3.0em;
+    font-family: Montserrat, serif;
+    line-height: 1.0;
+    color: #363636;
+    padding-top: 15px;
+}
+
+.nextstops {
+    font-weight: 390;
+    font-size: 1.1em;
+    color: #605c5c;
+    width: auto;
+    padding-bottom: 5px;
+}
+
+hr {
+    margin: 3px 0 0px 0;
+    width: 100%;
+}
+
+.time1 {
+    grid-area: time1;
+}
+
+.time2 {
+    grid-area: time2;
+}
+
+.time3 {
+    grid-area: time3;
+}
+
+.name1 {
+    grid-area: name1;
+}
+
+.name2 {
+    grid-area: name2;
+}
+
+.name3 {
+    grid-area: name3;
+}
+
+
+.time1,
+.time2,
+.time3,
+.name1,
+.name2,
+.name3 {
+    font-size: 1.2em;
+    font-family: 'Open Sans';
+    font-weight: 300;
+    max-width: 210px;
+}
+
+.time1,
+.time2,
+.time3 {
+    padding: 8px 5px 5px 25px;
+}
+
+
+.name1, .name2, .name3 {
+    padding: 8px 5px 5px 8px;
+}
+
+
+html,
+body,
+.container {
+    margin: 0;
+}
+
+body {
+    background-color: rgb(255, 250, 226);
+}
+
+.container * {
+    position: relative;
+}

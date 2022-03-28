@@ -9,27 +9,36 @@
           integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
           crossorigin=""/>
 
+    <link rel="icon" href="data:,">
     <title>Title</title>
     <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="popup.css">
 </head>
-<template>
-    <div class="popup-prototype" style="display: flex;">
-        <span>49</span>
-        <!--    <div style = "display: inline-block; width: 0; height: 20px; border: 2px solid black;"></div>-->
-        <div style="width: 2px; margin: 10px 0 10px 0; background-color: black;">&nbsp;</div>
-        <span>UBC</span>
+
+
+<template id="popup-template">
+    <div id="popup-container">
+        <div class="tripname">49 UBC</div>
+        <div class="nextstops">
+            Next stops
+            <hr style="color: azure;"/>
+        </div>
+        <div id="popup-grid-container" class="container">
+            <div class="time1">30 s</div>
+            <div class="time2">90 s</div>
+            <div class="time3">150 s</div>
+            <div class="name1">Wesbroo Mall</div>
+            <div class="name2">Agronomy Rd</div>
+            <div class="name3">End station</div>
+        </div>
     </div>
 </template>
-
+inde
 <body>
 <div id="mapid">
-    <p id="time"
-       style="position: fixed; top: 30px; left: 200px; z-index: 1000; font-size: 1.5em; background-color: lightyellow; padding: 5px; border-radius: 10px; color: black">
-        test</p>
 
 </div>
-
-<script type="module" src="index.js"></script>
+<script type="module" src="dist/index.js"></script>
 </body>
 
 </html>

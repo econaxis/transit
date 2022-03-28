@@ -5,8 +5,6 @@ import { Graphics } from "pixi.js";
 
 import IShapePosition = transit.IShapePosition;
 
-const { BusInfo } = transit;
-
 function add(a, b) {
     return L.latLng(a.lat + b.lat, a.lng + b.lng);
 }
@@ -46,6 +44,8 @@ function draw_debug(obj: Graphics, pos: L.LatLng) {
     obj.position.set(pos1.x, pos1.y);
 }
 
+const dots = [];
+window["dots"] = dots;
 class LinearSegment {
     readonly p0: L.LatLng;
     readonly start_t: number;
@@ -62,7 +62,8 @@ class LinearSegment {
             if (this.next.next != undefined) {
                 const our_vec = subtract(this.p1(), this.p0);
                 const their_vec = subtract(this.next.p1(), this.next.p0);
-                if (dot(our_vec, their_vec) < 0.3) {
+                dots.push(dot(our_vec, their_vec));
+                if (dot(our_vec, their_vec) < 0.5) {
                     this.is_sharp_edge = true;
                 }
             }
@@ -81,22 +82,21 @@ class LinearSegment {
         return add(this.p0, mult(subtract(this.p1(), this.p0), t));
     }
 
-    interpolate(t: number): [L.LatLng, LinearSegment] {
+    interpolate(t: number, simple): [L.LatLng, LinearSegment] {
         if (this.next == undefined) {
             return [this.p0, this];
         }
         let scale = 0.7;
         let tscaled = (t - this.start_t) / (this.end_t() - this.start_t);
         if (tscaled > 1) {
-            return this.next.interpolate(t);
+            return this.next.interpolate(t, simple);
         }
         if (t < this.start_t) {
-            console.log("Waiting...");
             return [this.p0, this];
         }
 
         let ours = this.interpolate_scaledk(tscaled);
-        if (tscaled <= 1 - scale && this.prev != undefined) {
+        if (tscaled <= 1 - scale && this.prev != undefined && !simple) {
             const t_new = 0.5 + tscaled / (1 - scale) / 2;
             ours = this.interpolate_scaledk((1 - scale) / 2 + tscaled / 2);
             const theirs = this.prev.interpolate_scaledk(
@@ -107,7 +107,12 @@ class LinearSegment {
 
             return [pos, this];
         }
-        if (tscaled >= scale && this.next != undefined && this.is_sharp_edge) {
+        if (
+            tscaled >= scale &&
+            this.next != undefined &&
+            this.is_sharp_edge &&
+            !simple
+        ) {
             const theirs = this.next.interpolate_scaledk((tscaled - scale) / 2);
             ours = this.interpolate_scaledk(scale + (tscaled - scale) / 2);
             const new_t1 = (tscaled - scale) / (1 - scale) / 2;
@@ -142,8 +147,8 @@ export class Segments {
         }
     }
 
-    interpolate(t: number): L.LatLng {
-        const [position, next] = this.next.interpolate(t);
+    interpolate(t: number, simple): L.LatLng {
+        const [position, next] = this.next.interpolate(t, simple);
         this.next = next;
         return position;
     }
